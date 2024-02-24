@@ -1,0 +1,9 @@
+name "Cray X-MP backend"
+dir ncg
+end
+name "Cray X-MP EM library"
+dir libem
+end
+name "Cray X-MP floating point library"
+dir libfp
+end

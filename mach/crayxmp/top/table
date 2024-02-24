@@ -1,0 +1,81 @@
+
+/* Cray X-MP desciptor table for ACK target optimizer */
+
+MAXOP 3;
+
+%%;
+
+AREG1, AREG2               { VAL[0] == 'a' && VAL[1] >= '0' && VAL[1] <= '7' && VAL[2] == '\0' };
+SREG1, SREG2, SREG3, SREG4 { VAL[0] == 's' && VAL[1] >= '0' && VAL[1] <= '7' && VAL[2] == '\0' };
+C, L, X, Y, Z              { TRUE };
+%%;
+
+lc SREG1,X : tr SREG2,a6 : lshc SREG2,3 : iadd SREG2,SREG2,SREG1 : ldl SREG1,Y : lshc SREG1,3 : iadd SREG2,SREG2,SREG1 : push SREG2 : r Z
+   { is_word_offset(X) && is_loi8(Z) }
+                                                         -> ldl a4,Y : iadd a4,a4,a6 : ld s7,X/8,a4 ;
+lba SREG1,L : ldl SREG2,X : lshc SREG2,3 : iadd SREG1,SREG1,SREG2 : push SREG1 : r Z
+   { is_word_offset(X) && is_loi8(Z) }
+                                                         -> ldl a4,X : ld s7,L,a4 ;
+lba SREG1,L : ldl SREG2,X : lshc SREG2,3 : iadd SREG1,SREG1,SREG2 : push SREG3 : push SREG1 : r Z
+   { is_word_offset(X) && is_loi8(Z) }
+                                                         -> push SREG3 : ldl a4,X : ld s7,L,a4 ;
+lc SREG1,X : tr SREG2,a6 : lshc SREG2,3 : iadd SREG2,SREG2,SREG1 : ldl SREG1,Y : lshc SREG1,3 : iadd SREG2,SREG2,SREG1 : lc SREG1,C : push SREG1 : push SREG2 : r Z
+   { is_word_offset(X) && is_sti8(Z) }
+                                                         -> ldl a4,Y : iadd a4,a4,a6 : lc SREG1,C : st X/8,a4,SREG1 ;
+lc SREG1,X : tr SREG2,a6 : lshc SREG2,3 : iadd SREG2,SREG2,SREG1 : ldl SREG1,Y : lshc SREG1,3 : iadd SREG2,SREG2,SREG1 : push SREG4 : push SREG2 : r Z
+   { is_word_offset(X) && is_sti8(Z) }
+                                                         -> ldl a4,Y : iadd a4,a4,a6 : st X/8,a4,SREG4 ;
+push SREG1 : push SREG2 : ld SREG3,0,a7 : ld SREG2,1,a7 : push SREG2 : push SREG3 : inra a7 : pop SREG1 : pop SREG2
+                                                         -> push SREG1 ;
+push SREG1 : ldl SREG2,X : pop SREG3 : iadd SREG3,SREG3,SREG2 : stl X,SREG3
+                                                         -> ldl SREG2,X : iadd SREG3,SREG1,SREG2 : stl X,SREG3 ;
+push SREG1 : tr SREG2,SREG1 : stl X,SREG2 : pop SREG3    -> stl X,SREG1 : tr SREG3,SREG1 ;
+ld SREG1,X,AREG1 : push SREG1 : ld SREG1,X,AREG1         -> ld SREG1,X,AREG1 : push SREG1 ;
+ld SREG1,X,AREG1 : tr SREG2,SREG1                        -> ld SREG2,X,AREG1 ;
+st X,AREG1,SREG1 : ld SREG2,X,AREG1                      -> st X,AREG1,SREG1 : tr SREG2,SREG1 ;
+push SREG1 : ld SREG2,0,a7 : push SREG2 : tr SREG1,SREG2 -> push SREG1 : push SREG1 ;
+push SREG1 : ld SREG1,0,a7                               -> push SREG1 ;
+push X : pop Y                                           -> tr Y,X ;
+push SREG1 : iadd SREG2,SREG2,SREG1 : pop SREG1          -> iadd SREG2,SREG2,SREG1 ;
+push SREG1 : isub SREG2,SREG2,SREG1 : pop SREG1          -> isub SREG2,SREG2,SREG1 ;
+push SREG1 : stl X,SREG1 : pop SREG1                     -> stl X,SREG1 ;
+lc X,0 : iadd Y,Y,X                                      -> ;
+lc X,0 : isub Y,Y,X                                      -> ;
+push X : inra a7                                         -> ;
+push SREG1 : ld SREG2,X,a7 : ld SREG3,Y,a7 : pop SREG1   -> ld SREG2,X,a7 : ld SREG3,Y,a7 ;
+lc AREG1,1 : iadd AREG2,AREG2,AREG1                      -> inra AREG2 ;
+lc AREG1,1 : isub AREG2,AREG2,AREG1                      -> dcra AREG2 ;
+lc SREG1,X : stl Y,SREG1 : lc SREG1,X                    -> lc SREG1,X : stl Y,SREG1 ;
+tr SREG1,SREG2 : stl X,SREG1 : lc SREG1,C                -> stl X,SREG2 : lc SREG1,C ;
+tr SREG1,SREG2 : stl X,SREG1 : pop SREG1                 -> stl X,SREG2 : pop SREG1 ;
+
+%%;
+
+/* Auxiliary routines: */
+
+#include <string.h>
+
+int is_word_offset(char *s) {
+	int n;
+	int sign = 0;
+
+	n = 0;
+	if (*s == '-') {
+		sign = 1;
+		s += 1;
+	}
+	while (*s >= '0' && *s <= '9') {
+		n = (n * 10) + (*s - '0');
+		s += 1;
+	}
+	if (sign) n = -n;
+        return *s == '\0' && (n % 8) == 0;
+}
+
+int is_loi8(char *s) {
+	return strcmp(s, "%loi@8") == 0;
+}
+
+int is_sti8(char *s) {
+	return strcmp(s, "%sti@8") == 0;
+}

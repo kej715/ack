@@ -1,0 +1,1876 @@
+/*
+ * (c) copyright 1989 by the Vrije Universiteit, Amsterdam, The Netherlands.
+ * See the copyright notice in the ACK home directory, in the file "Copyright".
+ */
+
+rscid = "$Id$"
+
+/*
+ * Back end tables for Cray X-MP
+ *
+ * Author : Kevin Jordan
+ *
+ * wordsize = 8 bytes, pointersize = 8 bytes.
+ *
+ * Register a5 is used as heap pointer
+ *          a6 is used as LB
+ *          a7 is used as SP
+ *
+ */
+
+#define WS 8
+#define PS 8
+
+SL = 8
+SSL = "8"
+
+EM_WSIZE = WS
+EM_PSIZE = PS
+EM_BSIZE = 16
+
+SIZEFACTOR = 5/1
+
+#define REGVARS
+
+#define EXACT exact	/* to improve code but slow down code generator,
+			   define it to nothing
+			*/
+
+/*****************************************************************/
+PROPERTIES
+/*****************************************************************/
+
+AREG			/* an A register              */
+AAREG			/* an allocatable A register  */
+ABREG			/* an allocatable B register  */
+BREG                    /* a  B register              */
+SREG			/* an S register              */
+ASREG			/* an allocatable S register  */
+FNARG                   /* function argument register */
+FNRET                   /* function return register   */
+RAREG                   /* return address register    */
+LOCALBASE
+STACKPOINTER
+HEAPPOINTER
+
+/*****************************************************************/
+REGISTERS
+/*****************************************************************/
+
+a0			: AREG .
+a1,a2,a3,a4		: AREG, AAREG .
+b00                     : BREG, RAREG .
+b01                     : BREG, ABREG .
+hp("a5")		: AREG, HEAPPOINTER .
+lb("a6")		: AREG, LOCALBASE .
+sp("a7")		: AREG, STACKPOINTER .
+s0			: SREG .
+s1			: SREG, ASREG, FNARG .
+s2,s3,s4,s5,s6   	: SREG, ASREG .
+s7                      : SREG, ASREG, FNRET .
+sb			: SREG .
+
+/*****************************************************************/
+TOKENS
+/*****************************************************************/
+
+CONST = { INT val;  } 8 val .
+LABEL = { ADDR off; } 8 off .
+LOCAL = { INT ind;  } 8 ind .
+
+/*****************************************************************/
+SETS
+
+anyreg = AREG+BREG+SREG .
+memref = LOCAL+LABEL .
+
+/*****************************************************************/
+
+/*****************************************************************/
+INSTRUCTIONS
+/*****************************************************************/
+/*                                                               */
+/* Due to the unique syntax of Cray Assembly Language, it cannot */
+/* be used directly here, so the opcodes, below, are references  */
+/* to macros.                                                    */
+/*                                                               */
+/*****************************************************************/
+
+cost(1,1)
+
+/* Load byte address into S registers */
+lba SREG:wo, LABEL:ro cost(2,2) .
+
+/* Entries into A and S registers */
+lc  anyreg:wo, CONST:ro cost(2,2) .
+lc  anyreg:wo, LABEL:ro cost(2,2) .
+
+/* Transfers to A, B, and S registers */
+tr  anyreg:rw, anyreg:ro .
+
+/* Load A and S registers from memory */
+ld  anyreg:wo, LABEL:ro, AREG:ro cost(2,2) .
+ldl anyreg:wo, LOCAL:ro          cost(2,2) .
+
+/* Store A and S registers to memory */
+st  LABEL:ro, AREG:ro, anyreg:ro cost(2,2) .
+stl LOCAL:ro, anyreg:ro          cost(2,2) .
+
+/* Increment and decrement A registers */
+inra AREG:rw .
+dcra AREG:rw .
+
+/* 24-bit integer arithmetic on A registers */
+iadd AREG:rw, AREG:rw, AREG:rw .
+isub AREG:rw, AREG:rw, AREG:rw .
+
+/* 64-bit integer arithmetic on S registers */
+iadd SREG:rw, SREG:rw, SREG:rw .
+isub SREG:rw, SREG:rw, SREG:rw .
+ineg SREG:rw, SREG:rw          .
+
+/* Floating point arithmetic on S registers */
+fadd SREG:rw, SREG:rw, SREG:rw .
+fsub SREG:rw, SREG:rw, SREG:rw .
+fmul SREG:rw, SREG:rw, SREG:rw .
+fdiv SREG:rw, SREG:rw, SREG:rw .
+fneg SREG:rw, SREG:rw          .
+
+/* 64-bit logical operations on S registers */
+andsc SREG:rw, SREG:rw, SREG:rw .
+ands  SREG:rw, SREG:rw, SREG:rw .
+iors  SREG:rw, SREG:rw, SREG:rw .
+xors  SREG:rw, SREG:rw, SREG:rw .
+nots  SREG:rw, SREG:rw          .
+
+/* 64-bit mask operations on S registers */
+lmask SREG:wo, CONST:ro .
+rmask SREG:wo, CONST:ro .
+
+/* Shift instructions on S registers */
+lshc  SREG:rw, CONST:ro .
+lsha  SREG:rw, AREG:ro  .
+lshaw SREG:rw, SREG:rw, AREG:ro  .
+rshc  SREG:rw, CONST:ro .
+rsha  SREG:rw, AREG:ro  .
+rshaw SREG:rw, SREG:rw, AREG:ro  .
+
+/* Unconditional branches */
+j  LABEL cost(2,2) .
+j  BREG .
+
+/* Conditional branches on A registers */
+jaz LABEL cost(2,2) .
+jan LABEL cost(2,2) .
+jap LABEL cost(2,2) .
+jam LABEL cost(2,2) .
+
+/* Conditional branches on S registers */
+jsz LABEL cost(2,2) .
+jsn LABEL cost(2,2) .
+jsp LABEL cost(2,2) .
+jsm LABEL cost(2,2) .
+
+/* Return jump instruction */
+r   LABEL cost(2,2) .
+
+/* Push and pop instructions */
+push AREG:ro .
+push SREG:ro .
+pop  AREG:rw .
+pop  SREG:rw .
+
+killreg "! kill" anyreg:wo cost(0,0) .
+killcc "! kill cc" kills:cc cost(0,0) .
+
+/*****************************************************************/
+MOVES
+/*****************************************************************/
+
+from LOCAL to SREG
+  gen
+    ldl %2,%1
+
+from LABEL to SREG
+  gen
+    lba %2,%1
+
+/*
+from LABEL to AREG
+  gen
+    lc %2,%1
+*/
+
+from SREG to LOCAL
+  gen
+    stl %2,%1
+
+from SREG to LABEL
+  gen
+    st %2,a0,%1
+
+from anyreg to AREG
+  gen
+    tr %2,%1
+
+from anyreg to SREG
+  gen
+    tr %2,%1
+
+from AREG to BREG
+  gen
+    tr %2,%1
+
+from CONST to AREG
+  gen
+    lc %2,%1
+
+from CONST to SREG
+  gen
+    lc %2,%1
+
+from CONST to LOCAL
+  gen
+    lc  s0,%1
+    stl %2,s0
+
+from CONST to LABEL
+  gen
+    lc s0,%1
+    st %2,a0,s0
+
+/*****************************************************************/
+TESTS
+/*****************************************************************/
+
+to test AREG
+  gen
+    tr a0,%1
+
+to test SREG
+  gen
+    tr s0,%1
+
+to test LOCAL
+  gen
+    ldl s0,%1
+
+to test LABEL
+  gen
+    ld s0,%1,a0
+
+/*****************************************************************/
+STACKINGRULES
+/*****************************************************************/
+
+from CONST to STACK
+  uses ASREG
+  gen
+    lc    %a,%1
+    push  %a
+
+from CONST to STACK
+  gen
+    st    {LABEL,"-2"},sp,s1
+    lc    s1,%1
+    push  s1
+    ld    s1,{LABEL,"-1"},sp
+
+from AREG to STACK
+  gen
+    push  %1
+
+from SREG to STACK
+  gen
+    push  %1
+
+from memref to STACK
+  uses ASREG
+  gen
+    move  %1,%a
+    push  %a
+
+from memref to STACK
+  gen
+    st    {LABEL,"-2"},sp,s1
+    move  %1,s1
+    push  s1
+    ld    s1,{LABEL,"-1"},sp
+
+/*****************************************************************/
+COERCIONS
+/*****************************************************************/
+
+from LOCAL+LABEL+CONST
+  uses reusing %1,ASREG=%1
+  yields %a
+
+from AREG
+  uses reusing %1,ASREG
+  gen
+    move %1,%a
+  yields %a
+
+from STACK
+  uses ASREG
+  gen
+    pop  %a
+  yields %a
+
+from STACK
+  uses AAREG
+  gen
+    pop  %a
+  yields %a
+
+/*****************************************************************/
+PATTERNS
+/*****************************************************************/
+
+/******************************************************************
+ *  Group 1 : Load Instructions					  *
+ ******************************************************************/
+
+pat loc
+  yields {CONST,$1}
+
+pat lol
+  uses ASREG
+  gen
+    ldl %a,{LOCAL,$1}
+  yields %a
+
+pat stl lol $1==$2
+  leaving
+    dup 8
+    stl $1
+
+pat sdl ldl $1==$2
+  leaving
+    dup 16
+    sdl $1
+
+pat loe
+  uses ASREG
+  gen
+    ld %a,{LABEL,$1},a0
+  yields %a
+
+pat ste loe $1==$2
+  leaving
+    dup 8
+    ste $1
+
+pat sde lde $1==$2
+  leaving
+    dup 16
+    sde $1
+
+pat lil
+  leaving
+    lol $1
+    loi 8
+
+pat sil lil $1==$2
+  leaving
+    dup 8
+    sil $1
+
+pat lof
+  leaving
+    adp $1
+    loi 8
+
+pat lal
+  uses ASREG, ASREG
+  gen
+    lc   %b,{CONST,$1}
+    move lb,%a
+    lshc %a,{CONST,3}
+    iadd %a,%a,%b
+  yields %a
+
+pat lae
+  uses ASREG
+  gen
+    lba  %a,{LABEL,$1}
+  yields %a
+
+pat lpb
+  leaving
+    adp SL
+
+pat lxl $1==0
+  yields {LOCAL,0}
+
+pat lxl $1==1
+  uses AAREG
+  gen
+    ld %a,{LABEL,"1"},lb
+  yields %a
+
+pat lxl $1>1
+  uses AAREG, AAREG
+  gen
+    lc   %b,{CONST,$1}
+    move lb,%a
+    1:
+    ld   %a,{LABEL,"1"},%a
+    dcra %b
+    test %b
+    jan  {LABEL,1b}
+  yields %a
+
+pat lxa $1==0
+  yields {LOCAL,1}
+
+pat lxa $1==1
+  uses AAREG
+  gen
+    ld   %a,{LABEL,"1"},lb
+    inra %a
+    inra %a
+  yields %a
+
+pat lxa $1>1
+  uses AAREG, AAREG
+  gen
+    lc   %b,{CONST,$1}
+    move lb,%a
+    1:
+    ld   %a,{LABEL,"1"},%a
+    dcra %b
+    test %b
+    jan  {LABEL,1b}
+    inra %a
+    inra %a
+  yields %a
+
+pat dch
+  leaving
+    loi 8
+
+pat loi $1==1
+  kills ALL
+  gen
+    r {LABEL,"%loi@1"}
+  yields s7
+
+pat loi $1==2
+  kills ALL
+  gen
+    r {LABEL,"%loi@2"}
+  yields s7
+
+pat loi $1==8
+  kills ALL
+  gen
+    r {LABEL,"%loi@8"}
+  yields s7
+
+pat loi
+  kills ALL
+  gen
+    lc s1,{CONST,$1}
+    r {LABEL,"%loi"}
+  yields s7
+
+pat los
+  with FNARG
+  kills ALL
+  gen
+    r    {LABEL,"%loi"}
+
+pat ldl
+  yields {LOCAL,$1}
+         {LOCAL,$1+8}
+
+pat lde
+  yields {LABEL,$1}
+         {LABEL,$1+8}
+
+pat ldf
+  leaving
+    adp $1
+    loi 16
+
+pat lpi
+  yields {LABEL,$1}
+
+/*******************************************************************
+ *  Group 2 : Store Instructions				   *
+ *******************************************************************/
+
+pat stl lol $1==$2
+  with ASREG
+  yields %1 %1
+  leaving stl $1
+
+pat stl
+  with ASREG
+  gen
+    move %1,{LOCAL,$1}
+
+pat ste
+  with ASREG
+  gen
+    move %1,{LABEL,$1}
+
+pat sil
+  leaving
+    lol $1
+    sti 8
+
+pat sil lil $1==$2
+  leaving
+    dup 8
+    lol $1
+    sti 8
+
+pat stf
+  leaving
+    adp $1
+    sti 8
+
+pat sti $1==1
+  kills ALL
+  gen
+    r {LABEL,"%sti@1"}
+
+pat sti $1==2
+  kills ALL
+  gen
+    r {LABEL,"%sti@2"}
+
+pat sti $1==8
+  kills ALL
+  gen
+    r {LABEL,"%sti@8"}
+
+pat sti
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%sti"}
+
+pat sts
+  with FNARG
+  kills ALL
+  gen
+    r    {LABEL,"%sti"}
+
+pat sdl
+  with ASREG ASREG
+  yields %2 %1
+  leaving
+    stl $1
+    stl $1+8
+
+pat sde
+  with ASREG ASREG
+  yields %2 %1
+  leaving
+    ste $1
+    ste $1+8
+
+pat sdf
+  leaving
+    adp $1
+    sti 16
+
+/****************************************************************
+ *  Group 3 : Integer Arithmetic.				*
+ *								*
+ *  Implemented (sometimes with the use of subroutines) :	*
+ *  4 byte arithmetic.						*
+ ****************************************************************/
+
+pat adi $1==8
+  with ASREG ASREG
+  gen
+    iadd %2,%2,%1
+  yields %2
+
+pat sbi $1==8
+  with ASREG ASREG
+  gen
+    isub %2,%2,%1
+  yields %2
+
+pat mli $1==8
+  kills ALL
+  gen
+    r {LABEL,"%mli"}
+  yields s7
+
+pat dvi $1==8
+  kills ALL
+  gen
+    r {LABEL,"%dvi"}
+  yields s7
+
+pat rmi $1==8
+  kills ALL
+  gen
+    r {LABEL,"%rmi"}
+  yields s7
+
+pat ngi $1==8
+  with ASREG
+  gen
+    ineg %1,%1
+  yields %1
+
+pat loc sli $2==8
+  with ASREG
+  gen
+    lshc %1,{CONST,$1}
+  yields %1
+
+pat sli $1==8
+  with AAREG ASREG
+  gen
+    lsha %2,%1
+  yields %2
+
+pat loc sri $2==8
+  with ASREG
+  gen
+    rshc %1,{CONST,$1}
+  yields %1
+
+pat sri $1==8
+  with AAREG ASREG
+  gen
+    rsha %2,%1
+  yields %2
+
+/*******************************************************************
+ *  Group 4: Unsigned Arithmetic				   *
+ *******************************************************************/
+
+pat adu
+  leaving
+    adi $1
+pat loc lol adu stl $1==1 && $3==8 && $2==$4
+  leaving
+    inl $2
+pat loc loe adu ste $1==1 && $3==8 && $2==$4
+  leaving
+    ine $2
+pat loc lol adu $1==1 && $3==8
+  leaving
+    lol $2
+    inc
+pat loc loe adu $1==1 && $3==8
+  leaving
+    loe $2
+    inc
+pat loc lil adu $1==1 && $3==8
+  leaving
+    lil $2
+    inc
+pat loc lol adu stl $1==0-1 && $3==8 && $2==$4
+  leaving
+    del $2
+pat loc loe adu ste $1==0-1 && $3==8 && $2==$4
+  leaving
+    dee $2
+pat loc lol adu $1==0-1 && $3==8
+  leaving
+    lol $2
+    dec
+pat loc loe adu $1==0-1 && $3==8
+  leaving
+    loe $2
+    dec
+pat loc lil adu $1==0-1 && $3==8
+  leaving
+    lil $2
+    dec
+
+pat sbu
+  leaving sbi $1
+pat lol loc sbu stl $1==$4 && $2==1 && $3==8
+  leaving
+    del $1
+pat loe loc sbu ste $1==$4 && $2==1 && $3==8
+  leaving
+    dee $1
+pat lol loc sbu $2==1 && $3==8
+  leaving
+    lol $1
+    dec
+pat loe loc sbu $2==1 && $3==8
+  leaving
+    loe $1
+    dec
+pat lil loc sbu $2==1 && $3==8
+  leaving
+    lil $1
+    dec
+pat lol loc sbu stl $1==$4 && $2==0-1 && $3==8
+  leaving
+    inl $1
+pat loe loc sbu ste $1==$4 && $2==0-1 && $3==8
+  leaving
+    ine $1
+pat lol loc sbu $2==0-1 && $3==8
+  leaving
+    lol $1
+    inc
+pat loe loc sbu $2==0-1 && $3==8
+  leaving
+    loe $1
+    inc
+pat lil loc sbu $2==0-1 && $3==8
+  leaving
+    lil $1
+    inc
+
+pat mlu $1==8
+  kills ALL
+  gen
+    r {LABEL,"%mlu"}
+  yields s7
+
+pat dvu $1==8
+  kills ALL
+  gen
+    r {LABEL,"%dvu"}
+  yields s7
+
+pat rmu $1==8
+  kills ALL
+  gen
+    r {LABEL,"%rmu"}
+  yields s7
+
+pat slu
+  leaving
+    sli $1
+pat loc slu
+  leaving
+    loc $1
+    sli $2
+
+pat sru
+  leaving
+    sri $1
+pat loc sru
+  leaving
+    loc $1
+    sri $2
+
+/*******************************************************************
+ *  Group 5: Floating Point Instructions			   *
+ *******************************************************************/
+
+pat adf $1==8
+  with ASREG ASREG
+  gen
+    fadd %2,%2,%1
+  yields %2
+
+pat sbf $1==8
+  with ASREG ASREG
+  gen
+    fsub %2,%2,%1
+  yields %2
+
+pat mlf $1==8
+  with ASREG ASREG
+  gen
+    fmul %2,%2,%1
+  yields %2
+
+pat dvf $1==8
+  kills ALL
+  gen
+    r {LABEL,"%dvf"}
+  yields s7
+
+pat ngf $1==8
+  with ASREG
+  gen
+    fneg %1,%1
+  yields %1
+
+pat fif $1==8
+  kills ALL
+  gen
+    r {LABEL,"%fif"}
+
+pat fef $1==8
+  kills ALL
+  gen
+    r {LABEL,"%fef"}
+
+/******************************************************************
+ *  Group 6: Pointer Arithmetic					  *
+ ******************************************************************/
+
+pat adp
+  with exact LABEL
+  yields {LABEL,%1.off+$1}
+  with exact LOCAL
+  yields {LOCAL,%1.ind+$1}
+  with ASREG
+  uses ASREG
+    gen
+      lc   %a,{CONST,$1}
+      iadd %1,%1,%a
+  yields %1
+
+pat ads $1==8
+  leaving
+    adi 8
+
+pat sbs $1==8
+  leaving
+    sbi 8
+
+/*******************************************************************
+ *  Group 7 : Increment/Decrement Zero				   *
+ *******************************************************************/
+
+pat inc
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    iadd %1,%1,%a
+  yields %1
+
+pat inl
+  leaving
+    lol $1
+    inc
+    stl $1
+
+pat ine
+  leaving
+    loe $1
+    inc
+    ste $1
+
+pat dec
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    isub %1,%1,%a
+  yields %1
+
+pat del
+  leaving
+    lol $1
+    dec
+    stl $1
+
+pat dee
+  leaving
+    loe $1
+    dec
+    ste $1
+
+pat zrl
+  gen
+    move {CONST,0},{LOCAL,$1}
+
+pat zre
+  gen
+    move {CONST,0},{LABEL,$1}
+
+pat zrf
+  leaving zer $1
+
+pat zer $1==8
+  yields {CONST,0}
+pat zer $1==16
+  yields {CONST,0}
+         {CONST,0}
+pat zer $1==24
+  yields {CONST,0}
+         {CONST,0}
+         {CONST,0}
+pat zer $1==32
+  yields {CONST,0}
+         {CONST,0}
+         {CONST,0}
+         {CONST,0}
+
+pat zer
+  uses AAREG
+  gen
+    move {CONST,($1+7)/8},%a
+    move {CONST,0},s0
+    1:
+    push  s0
+    dcra  %a
+    test  %a
+    jan   {LABEL,1b}
+
+/*******************************************************************
+ *  Group 8: Convert Instructions				   *
+ *******************************************************************/
+
+pat loc loc cii $1==$2
+
+pat loc loc cii $1==1
+  with ASREG
+  uses ASREG
+  gen
+    lc    %a,{CONST,128}
+    ands  s0,%a,%1
+    jsz   {LABEL,1f}
+    lmask %a,{CONST,56}
+    iors  %1,%1,%a
+    1:
+  yields %1
+
+pat loc loc cii $1==2
+  with ASREG
+  uses ASREG
+  gen
+    lc    %a,{CONST,32768}
+    ands  s0,%a,%1
+    jsz   {LABEL,1f}
+    lmask %a,{CONST,48}
+    iors  %1,%1,%a
+    1:
+  yields %1
+
+pat cii
+
+pat loc loc ciu
+  leaving
+    loc $1
+    loc $2
+    cuu
+
+pat loc loc cui
+  leaving
+    loc $1
+    loc $2
+    cuu
+
+pat cui
+  leaving
+    cuu
+
+pat ciu
+  leaving
+    cuu
+
+pat loc loc cuu $1==$2
+
+pat cuu
+
+pat loc loc cif $1==1 || $1==2
+  leaving
+    loc $1
+    loc $2
+    cii
+    cif
+
+pat cif
+  with ASREG ASREG
+  kills ALL
+  gen
+    r {LABEL,"%cif"}
+  yields s7
+
+pat cuf
+  with ASREG ASREG
+  kills ALL
+  gen
+    r {LABEL,"%cuf"}
+  yields s7
+
+pat cfi
+  with ASREG ASREG
+  kills ALL
+  gen
+    r {LABEL,"%cfi"}
+  yields s7
+
+pat cfu
+  leaving
+    cfi
+
+pat cff
+
+/********************************************************************
+ *  Group 9 : Logical Instructions				    *
+ ********************************************************************/
+
+pat and $1<=8
+  with ASREG ASREG
+  gen
+    ands %1,%1,%2
+  yields %1
+
+pat and defined($1)
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%and"}
+
+pat and !defined($1)
+  kills ALL
+  gen
+    pop s1
+    r   {LABEL,"%and"}
+
+pat ior $1<=8
+  with ASREG ASREG
+  gen
+    iors %1,%1,%2
+  yields %1
+
+pat ior defined($1)
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%ior"}
+
+pat ior !defined($1)
+  kills ALL
+  gen
+    pop s1
+    r   {LABEL,"%ior"}
+
+pat xor $1<=8
+  with ASREG ASREG
+  gen
+    xors %1,%1,%2
+  yields %1
+
+pat xor defined($1)
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%xor"}
+
+pat xor !defined($1)
+  kills ALL
+  gen
+    pop s1
+    r   {LABEL,"%xor"}
+
+pat com $1<=8
+  with ASREG
+  gen
+    nots %1,%1
+  yields %1
+
+pat com defined($1)
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%com"}
+
+pat com !defined($1)
+  kills ALL
+  gen
+    pop s1
+    r   {LABEL,"%com"}
+
+pat rol $1==8
+  with ASREG ASREG
+  uses ASREG, AAREG
+  gen
+    lc    %a,{CONST,63}
+    ands  %a,%a,%1
+    test  %a
+    jsz   {LABEL,1f}
+    move  %a,%b
+    lshaw %2,%2,%b
+    1:
+
+pat ror $1==8
+  with ASREG ASREG
+  uses ASREG, AAREG
+  gen
+    lc    %a,{CONST,63}
+    ands  %a,%a,%1
+    test  %a
+    jsz   {LABEL,1f}
+    move  %a,%b
+    rshaw %2,%2,%b
+    1:
+
+/*******************************************************************
+ *  Group 10 : Set Instructions					   *
+ *******************************************************************/
+
+pat inn $1==8
+  with AAREG ASREG
+  uses ASREG
+  gen
+    rsha  %2,%1
+    rmask %a,{CONST,1}
+    ands  %2,%2,%a
+  yields %2
+
+pat loc inn $1==0 && $2==8
+  with ASREG
+  uses ASREG
+  gen
+    rmask %a,{CONST,1}
+    ands  %1,%1,%a
+  yields %1
+
+pat inn defined($1)
+  kills ALL
+  uses ASREG
+  gen
+    lc    %a,{CONST,$1}
+    push  %a
+    r     {LABEL,"%inn"}
+  yields s7
+
+pat inn !defined($1)
+  with STACK
+  kills ALL
+  gen
+    r {LABEL,"%inn"}
+  yields s7
+
+pat set $1==8
+  with AAREG
+  uses ASREG
+  gen
+    lc  %a,{CONST,1}
+    rsha %a,%1
+  yields %a
+
+pat set defined($1)
+  kills ALL
+  uses ASREG
+  gen
+    lc    %a,{CONST,$1}
+    push  %a
+    r     {LABEL,"%set"}
+
+pat set !defined($1)
+  kills ALL
+  gen
+    r {LABEL,"%set"}
+
+/********************************************************************
+ *  Group 11 : Array Instructions				    *
+ ********************************************************************/
+/*
+pat lae aar $2==8 && rom($1,3)==1 && rom($1,1)==0
+  leaving
+    ads 8
+
+pat lae aar $2==8 && rom($1,3)==1 && rom($1,1)!=0
+  leaving
+    adp 0-rom($1,1)
+    ads 8
+
+pat lae aar $2==8 && rom($1,3)==2 && rom($1,1)==0
+  leaving
+    loc 1
+    sli 8
+    ads 8
+
+pat lae aar $2==8 && rom($1,3)==2 && rom($1,1)!=0
+  leaving
+    adp 0-rom($1,1)
+    loc 1
+    sli 8
+    ads 8
+
+pat lae aar $2==8 && rom($1,3)==8 && rom($1,1)==0
+  leaving
+    loc 3
+    sli 8
+    ads 8
+
+pat lae aar $2==8 && rom($1,3)==8 && rom($1,1)!=0
+  leaving
+    adp 0-rom($1,1)
+    loc 3
+    sli 8
+    ads 8
+
+pat lae aar $2==8 && rom($1,1)==0
+  leaving
+    loc rom($1,3)
+    mli 8
+    ads 8
+
+pat lae aar $2==8 && rom($1,1)!=0
+  leaving
+    adp 0-rom($1,1)
+    loc rom($1,3)
+    mli 8
+    ads 8
+
+pat lae lar defined(rom($1,3))
+  leaving
+    lae $1
+    aar $2
+    loi rom($1,3)
+
+pat lae sar defined(rom($1,3))
+  leaving
+    lae $1
+    aar $2
+    sti rom($1,3)
+*/
+pat aar defined($1)
+  kills ALL
+  gen
+    lc s1,{CONST,$1}
+    r {LABEL,"%aar"}
+  yields s7
+
+pat aar !defined($1)
+  with FNARG
+  kills ALL
+  gen
+    r {LABEL,"%aar"}
+  yields s7
+
+pat lar defined($1)
+  kills ALL
+  gen
+    lc s1,{CONST,$1}
+    r {LABEL,"%lar"}
+  yields s7
+
+pat lar !defined($1)
+  with FNARG
+  kills ALL
+  gen
+    r {LABEL,"%lar"}
+  yields s7
+
+pat sar defined($1)
+  kills ALL
+  gen
+    lc s1,{CONST,$1}
+    r {LABEL,"%sar"}
+
+pat sar !defined($1)
+  with FNARG
+  kills ALL
+  gen
+    r {LABEL,"%sar"}
+
+/*******************************************************************
+ *  Group 12 : Compare Instructions				   *
+ *******************************************************************/
+
+pat loc cmi teq and $1>=(0-2097152) && $1<=2097151 && $2==8 && $4==8
+  with ASREG ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    jsz  {LABEL,1f}
+    move {CONST,0},%2
+    1:
+  yields %2
+
+pat loc cmi tne and $1>=(0-2097152) && $1<=2097151 && $2==8 && $4==8
+  with ASREG ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    jsn  {LABEL,1f}
+    move {CONST,0},%2
+    1:
+  yields %2
+
+pat loc cmi teq ior $1>=(0-2097152) && $1<=2097151 && $2==8 && $4==8
+  with ASREG ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    jsn  {LABEL,1f}
+    move {CONST,1},%2
+    1:
+  yields %2
+
+pat loc cmi tne ior $1>=(0-2097152) && $1<=2097151 && $2==8 && $4==8
+  with ASREG ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    jsz  {LABEL,1f}
+    move {CONST,1},%2
+    1:
+  yields %2
+
+pat loc cmi teq $1>=(0-2097152) && $1<=2097151 && $2==8
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    move {CONST,1},%1
+    jsz  {LABEL,1f}
+    move {CONST,0},%1
+    1:
+  yields %1
+
+pat loc cmi tne $1>=(0-2097152) && $1<=2097151 && $2==8
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,$1}
+    xors s0,%a,%1
+    move s0,%1
+    jsz  {LABEL,1f}
+    move {CONST,1},%1
+    1:
+  yields %1
+
+pat cmi $1==8
+  leaving
+    sbi 8
+
+pat cmf $1==8
+  leaving
+    sbf 8
+
+pat cmu $1==8
+  with ASREG ASREG
+  uses ASREG
+  gen
+    xors %a,%2,%1
+    isub %1,%2,%1
+    ands s0,%a,sb
+    jsp  {LABEL,1f} /* if sign bits of operands same */
+    ineg %1,%1
+    1:
+  yields %1
+
+pat cmp
+  leaving
+    cmu 8
+
+pat cms $1==8
+  leaving
+    sbi 8
+
+pat cms defined($1)
+  kills ALL
+  gen
+    lc s1,{CONST,$1}
+    r  {LABEL,"%cms"}
+  yields s7
+
+pat cms !defined($1)
+  kills ALL
+  gen
+    pop s1
+    r   {LABEL,"%cms"}
+  yields s7
+
+pat teq
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    test %1
+    jsz  {LABEL,1f}
+    lc   %a,{CONST,0}
+    1:
+  yields %a
+
+pat tge
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    test %1
+    jsp  {LABEL,1f}
+    lc   %a,{CONST,0}
+    1:
+  yields %a
+
+pat tgt
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,0}
+    test %1
+    jsm  {LABEL,1f}
+    jsz  {LABEL,1f}
+    lc   %a,{CONST,1}
+    1:
+  yields %a
+
+pat tlt
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    test %1
+    jsm  {LABEL,1f}
+    lc   %a,{CONST,0}
+    1:
+  yields %a
+
+pat tle
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    test %1
+    jsm  {LABEL,1f}
+    jsz  {LABEL,1f}
+    lc   %a,{CONST,0}
+    1:
+  yields %a
+
+pat tne
+  with ASREG
+  uses ASREG
+  gen
+    lc   %a,{CONST,1}
+    test %1
+    jsn  {LABEL,1f}
+    lc   %a,{CONST,0}
+    1:
+  yields %a
+
+/*******************************************************************
+ *  Group 13 : Branch Instructions				   *
+ *******************************************************************/
+
+pat bra
+  with STACK
+  gen
+    j {LABEL,$1}
+
+pat blt
+  with ASREG ASREG STACK
+  gen
+    isub s0,%2,%1
+    jsm  {LABEL,$1}
+
+pat ble
+  with ASREG ASREG STACK
+  gen
+    isub s0,%1,%2
+    jsp  {LABEL,$1}
+
+pat beq
+  with ASREG ASREG STACK
+  gen
+    xors s0,%2,%1
+    jsz  {LABEL,$1}
+
+pat bne
+  with ASREG ASREG STACK
+  gen
+    xors s0,%2,%1
+    jsn  {LABEL,$1}
+
+pat bge
+  with ASREG ASREG STACK
+  gen
+    isub s0,%2,%1
+    jsp  {LABEL,$1}
+
+pat bgt
+  with ASREG ASREG STACK
+  gen
+    isub s0,%1,%2
+    jsm  {LABEL,$1}
+
+pat zlt
+  with STACK
+  gen
+    pop  s0
+    jsm  {LABEL,$1}
+
+pat zle
+  with STACK
+  gen
+    pop  s0
+    jsm  {LABEL,$1}
+    jsz  {LABEL,$1}
+
+pat zeq
+  with STACK
+  gen
+    pop  s0
+    jsz  {LABEL,$1}
+
+pat zne
+  with STACK
+  gen
+    pop  s0
+    jsn  {LABEL,$1}
+
+pat zge
+  with STACK
+  gen
+    pop  s0
+    jsp  {LABEL,$1}
+
+pat zgt
+  with STACK
+  gen
+    pop  s0
+    jsz  {LABEL,1f}
+    jsp  {LABEL,$1}
+    1:
+
+/*******************************************************************
+ *  Group 14 : Procedure-call Instructions			   *
+ *******************************************************************/
+
+pat cal
+  kills ALL
+  gen
+    r    {LABEL,$1}
+
+pat cai
+  kills ALL
+  gen
+    r    {LABEL,"%cai"}
+
+pat lfr $1==8
+  yields s7
+
+pat lfr $1>8
+  with STACK
+  uses AAREG, ASREG
+  gen
+    lc    %a,{CONST,$1/8}
+    1:
+    test  %a
+    jaz   {LABEL,2f}
+    dcra  %a
+    ld    %b,{LABEL,"%fra"},%a
+    push  %b
+    j     {LABEL,1b}
+    2:
+
+pat lfr ret $1==$2
+  leaving
+    ret 0
+
+pat ret $1==0
+  with STACK
+  uses RAREG
+  gen
+    move lb,sp
+    pop  lb
+    move lb,%a
+    pop  lb
+    j    %a
+
+pat ret $1==8
+  with FNRET STACK
+  uses RAREG
+  gen
+    move lb,sp
+    pop  lb
+    move lb,%a
+    pop  lb
+    j    %a
+
+pat ret $1>8
+  with STACK
+  uses AAREG, AAREG, ASREG, RAREG
+  gen
+    lc    %a,{CONST,$1/8}
+    lc    %b,{CONST, 0}
+    1:
+    test  %a
+    jaz   {LABEL,2f}
+    pop   %c
+    st    {LABEL,"%fra"},%b,%c
+    dcra  %a
+    inra  %b
+    j     {LABEL,1b}
+    2:
+    move lb,sp
+    pop  lb
+    move lb,%d
+    pop  lb
+    j    %d
+
+/********************************************************************
+ *  Group 15 : Miscellaneous Instructions			    *
+ ********************************************************************/
+
+pat asp $1==0 /* do nothing */
+
+pat asp $1==8
+  with STACK
+  gen
+    inra sp
+
+pat asp $1==16
+  with STACK
+  gen
+    inra sp
+    inra sp
+
+pat asp $1<0
+  with STACK
+  uses AAREG
+  gen
+    lc   %a,{CONST,$1/8}
+    iadd %a,sp,%a
+    isub a0,hp,%a
+    jap  {LABEL,"@estack"}
+    move %a,sp
+
+pat asp
+  with STACK
+  uses AAREG
+  gen
+    lc   %a,{CONST,$1/8}
+    iadd sp,sp,%a
+
+pat ass
+  with ASREG STACK
+  uses AAREG
+  gen
+    rshc %1,{CONST,3}
+    move %1,%a
+    iadd %a,sp,%a
+    isub a0,hp,%a
+    jap  {LABEL,"@estack"}
+    move %a,sp
+
+pat ass !defined($1)
+  with ASREG ASREG STACK
+  uses AAREG
+  gen
+    rshc %2,{CONST,3}
+    move %2,%a
+    iadd %a,sp,%a
+    isub a0,hp,%a
+    jap  {LABEL,"@estack"}
+    move %a,sp
+
+pat blm $1==0
+  with STACK
+  gen
+    inra sp
+    inra sp
+
+pat blm
+  with STACK
+  kills ALL
+  gen
+    lc   a1,{CONST,$1}
+    pop  s1
+    pop  s2
+    r    {LABEL,"%blm"}
+
+pat bls $1==8
+  with STACK
+  kills ALL
+  gen
+    pop  a1
+    pop  s1
+    pop  s2
+    r    {LABEL,"%blm"}
+
+pat bls !defined($1)
+  with STACK
+  kills ALL
+  gen
+    pop  a1  /* discard size of count */
+    pop  a1
+    pop  s1
+    pop  s2
+    r    {LABEL,"%blm"}
+
+pat csa $1==8
+  kills ALL
+  gen
+    r {LABEL, "%csa"}
+
+pat csa !defined($1)
+  with STACK
+  kills ALL
+  gen
+    pop  s1  /* discard size of count */
+    r    {LABEL, "%csa"}
+
+pat csb $1==8
+  kills ALL
+  gen
+    r {LABEL, "%csb"}
+
+pat csb !defined($1)
+  with STACK
+  kills ALL
+  gen
+    pop  s1  /* discard size of count */
+    r    {LABEL, "%csb"}
+
+pat dup $1==8
+  with STACK
+  uses ASREG
+  gen
+    ld %a,{LABEL,"0"},sp
+    push %a
+
+pat dup $1==16
+  with STACK
+  uses ASREG, ASREG
+  gen
+    ld %a,{LABEL,"0"},sp
+    ld %b,{LABEL,"1"},sp
+    push %b
+    push %a
+
+pat dup
+  kills ALL
+  gen
+    lc  s1,{CONST,$1}
+    r   {LABEL,"%dup"}
+
+pat dus $1==8
+  with FNARG
+  kills ALL
+  gen
+    r    {LABEL,"%dup"}
+
+pat dus !defined($1)
+  with STACK
+  kills ALL
+  gen
+    pop  s1  /* discard size of count */
+    pop  s1
+    r    {LABEL,"%dup"}
+
+pat exg $1==8
+  with ASREG ASREG STACK
+  yields %1 %2
+
+pat exg defined($1)
+  with STACK
+  kills ALL
+  uses FNARG
+  gen
+    lc  %a,{CONST,$1}
+    r   {LABEL,"%exg"}
+
+pat exg
+  with FNARG STACK
+  kills ALL
+  gen
+    r    {LABEL,"%exg"}
+
+pat gto
+  kills ALL
+  uses FNARG
+  gen
+    lc  %a,{LABEL,$1}
+    j   {LABEL, "%gto"}
+
+pat fil
+  uses ASREG
+  gen
+    lc %a,{LABEL,$1}
+    st {LABEL,"hol0"+4},a0,%a
+
+pat lim
+  uses ASREG
+  gen
+    ld %a,{LABEL,"@ignmask"},a0
+  yields %a
+
+pat lin
+  uses ASREG
+  gen
+    lc %a,{CONST,$1}
+    st {LABEL,"hol0"},a0,%a
+
+pat lni
+  uses ASREG, ASREG
+  gen
+    ld   %a,{LABEL,"hol0"},a0
+    lc   %b,{CONST,1}
+    iadd %a,%a,%b
+    st  {LABEL,"hol0"},a0,%a
+
+pat lor $1==0
+  yields lb
+
+pat lor $1==1
+  with STACK
+  yields sp
+
+pat lor $1==2
+  yields hp
+
+pat mon
+  with FNARG
+  kills ALL
+  gen
+    r {LABEL,"%mon"}
+
+pat nop
+  kills ALL
+#ifdef DEBUG
+  gen
+    r {LABEL,"%nop"}
+#endif
+
+pat rck
+  with ASREG STACK
+
+pat rtt
+  leaving
+    ret 0
+
+pat sig
+  with ASREG
+  uses ASREG
+  gen
+    ld %a,{LABEL,"@trphand"},a0
+    st {LABEL,"@trphand"},a0,%1
+  yields %a
+
+pat sim
+  with ASREG
+  gen
+    st {LABEL,"@ignmask"},a0,%1
+
+pat str $1==0
+  uses AAREG
+  gen
+    pop  %a
+    move %a,lb
+
+pat str $1==1
+  uses AAREG
+  gen
+    pop  %a
+    move %a,sp
+
+pat str $1==2
+  uses AAREG
+  gen
+    pop  %a
+    isub a0,%a,hp
+    jap  {LABEL,"@eheap"}
+    move %a,hp
+
+pat trp
+  with FNARG
+  kills ALL
+  gen
+    r {LABEL,"%%trp"}

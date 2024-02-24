@@ -1,0 +1,77 @@
+var w=8
+var wa={w}
+var p=8
+var pa={p}
+var s=2
+var sa={s}
+var l=8
+var la={l}
+var q=8
+var qa={q}
+var f=8
+var fa={f}
+var d=8
+var da={d}
+var x=8
+var xa={x}
+
+var ARCH=crayxmp
+var PLATFORM=cos
+var PLATFORMDIR={EM}/share/ack/{PLATFORM}
+var CPP_F=-D__cos -D__cray -D__crayxmp
+var MACHOPT_F=-m8
+var TEXTPATH={EM}/share/ack/{PLATFORM}/include/cal
+
+# Override the setting in fe so that files compiled for COS can see
+# the platform-specific headers.
+
+var C_INCLUDES=-I{EM}/share/ack/cos/include -I{EM}/share/ack/include/ansi
+
+name be
+	from .m.g
+	to .s
+	program {EM}/lib/ack/{PLATFORM}/ncg
+	args <
+	stdout
+	need .e
+end
+name asopt
+	from .s
+	to .so
+	program {EM}/lib/ack/{PLATFORM}/top
+	args
+	optimizer
+	stdin
+	stdout
+end
+name as
+	from .so
+	to .o
+	program cal
+	args -f -s -w -x -l 0 -i {SOURCE} -T {TEXTPATH} -t macros.s -o > <
+	prep cond
+end
+name ldr
+	from .o
+	to .out
+	program ldr
+	args \
+		-m loadmap.txt -o > < \
+		(.e:{HEAD}={PLATFORMDIR}/boot.o) \
+                ({RTS}:.c={PLATFORMDIR}/c-ansi.o) \
+                ({RTS}:.ocm.bas.b={PLATFORMDIR}/c-ansi.o) \
+		({RTS}:.mod={PLATFORMDIR}/modula2.o) \
+		({RTS}:.p={PLATFORMDIR}/pascal.o) \
+		(.p:{TAIL}={PLATFORMDIR}/libpascal.a) \
+		(.b:{TAIL}={PLATFORMDIR}/libb.a) \
+		(.bas:{TAIL}={PLATFORMDIR}/libbasic.a) \
+		(.mod:{TAIL}={PLATFORMDIR}/libmodula2.a) \
+		(.ocm:{TAIL}={PLATFORMDIR}/liboccam.a) \
+		(.ocm.bas.mod.b.c.p:{TAIL}={PLATFORMDIR}/libc.a) \
+		(.e:{TAIL}={PLATFORMDIR}/libem.a) \
+		           {PLATFORMDIR}/libsys.a \
+			   {PLATFORMDIR}/libc.a \
+			   {PLATFORMDIR}/libem.a \
+		           {PLATFORMDIR}/libsys.a
+	linker
+end

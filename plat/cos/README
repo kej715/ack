@@ -1,0 +1,18 @@
+The cos platform
+=================
+
+cos is a Cray X-MP based BSP that generates executables that can be run on a Cray X-MP
+supercomputer simulator running the COS operating system.
+
+COS has special needs, one being that it doesn't support byte-accessible files.
+The port's read/write/open/close/lseek etc should handle this transparently.
+
+File descriptors 0, 1 and 2 represent COS $IN, $OUT, and $ERR files.
+
+Example command line
+====================
+
+ack -mcos -o example.abs example.c
+
+Kevin Jordan
+kej@kyrafre.com

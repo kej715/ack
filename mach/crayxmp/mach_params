@@ -1,0 +1,5 @@
+MACH=crayxmp
+SUF=o
+ASAR=aal
+RANLIB=:
+MACHFL=-O -DCRAYXMP -DUFS
