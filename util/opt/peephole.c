@@ -265,7 +265,7 @@ static offset rotate(offset w, offset amount)
 #endif
 	highmask = (offset) (-1) << amount;
 	lowmask = ~highmask;
-	if (wordsize != 4)
+	if (wordsize < 4)
 		highmask &= wordsize == 2 ? 0xFFFF : 0xFF;
 	return (((w << amount) & highmask)
 			| ((w >> (8 * wordsize - amount)) & lowmask));

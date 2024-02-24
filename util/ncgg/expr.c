@@ -39,7 +39,7 @@ int b_expr(expr_t e)
 	return (e.ex_index);
 }
 
-expr_t make_expr(int type, int operator, int op1, int op2)
+expr_t make_expr(int type, int operator, long op1, long op2)
 {
 	expr_t result;
 
@@ -67,9 +67,7 @@ expr_t ident_expr(char *name)
 
 	sy_p = lookup(name, symany, mustexist);
 	if (sy_p->sy_type == symconst)
-		return (make_expr(TYPINT, EX_CON,
-				(int) (sy_p->sy_value.syv_cstval & 0xFFFF),
-				(int) (sy_p->sy_value.syv_cstval >> 16)));
+		return (make_expr(TYPINT, EX_CON, sy_p->sy_value.syv_cstval, 0));
 	else if (sy_p->sy_type == symsconst)
 		return (make_expr(TYPADDR, EX_STRING, sy_p->sy_value.syv_stringno, 0));
 	else if (sy_p->sy_type != symreg)
@@ -374,7 +372,7 @@ void initnodes(void)
 	nnodes++;
 }
 
-int ex_lookup(int operator, int lnode, int rnode)
+int ex_lookup(int operator, long lnode, long rnode)
 {
 	register node_p p;
 

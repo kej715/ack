@@ -37,12 +37,21 @@
 #define MAXSIZE		8	/* the maximum of the SZ_* constants	*/
 
 /* target machine sizes	*/
+#if defined(__crayxmp)
+#define	SZ_CHAR		(arith)1
+#define SZ_WORD		(arith)8
+#define	SZ_INT		(arith)8
+#define SZ_LONG		(arith)8
+#define	SZ_POINTER	(arith)8
+#define	SZ_REAL		(arith)8
+#else
 #define	SZ_CHAR		(arith)1
 #define SZ_WORD		(arith)4
 #define	SZ_INT		(arith)4
 #define SZ_LONG		(arith)4
 #define	SZ_POINTER	(arith)4
 #define	SZ_REAL		(arith)8
+#endif
 
 /* target machine alignment requirements	*/
 #define	AL_CHAR		1

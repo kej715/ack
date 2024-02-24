@@ -163,7 +163,11 @@ int _doprnt(register const char* fmt, va_list ap)
 	int nrchars = 0;
 	const char* oldfmt;
 	char *s1;
+#if defined(__crayxmp)
+	static char buf[32]; /* used to store rendered numbers */
+#else
 	static char buf[16]; /* used to store rendered numbers */
+#endif
 
 	while (c = *fmt++)
 	{

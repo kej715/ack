@@ -4,6 +4,7 @@
 #include "malloc.h"
 
 #if ACKCONF_WANT_MALLOC
+#include <stdio.h>
 
 block_t __mem_root = { &__mem_root, 0 };
 block_t* __mem_freelist = &__mem_root;

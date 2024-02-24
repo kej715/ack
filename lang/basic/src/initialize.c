@@ -34,11 +34,20 @@ void initialize(void)
 			cindex= "basic";
 		}
 	}
-	cptr=datfname;
-	while ( (*cptr++ = *cindex++) !=0 );
-	/* Strip trailing suffix */
-	if ( cptr>datfname+3 && cptr[-3]=='.' ) cptr[-3]=0;
-	strcat(datfname,".d");
+#if defined(__crayxmp)
+	strcpy(datfname, "$DATA");
+#else
+	if (getenv("CRAYXMP_COS") != NULL || getenv("__crayxmp") != NULL) {
+		strcpy(datfname, "$DATA");
+	}
+	else {
+		cptr=datfname;
+		while ( (*cptr++ = *cindex++) !=0 );
+		/* Strip trailing suffix */
+		if ( cptr>datfname+3 && cptr[-3]=='.' ) cptr[-3]=0;
+		strcat(datfname,".d");
+	}
+#endif
 	C_init((arith)BEMINTSIZE, (arith)BEMPTRSIZE);
 	result1 = sys_open(inpfile, OP_READ, &yyin);
 	result2 = C_open(outfile);

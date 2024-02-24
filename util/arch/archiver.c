@@ -363,6 +363,41 @@ int main(int argc, char *argv[])
 	{
 		/*fclose(mkstemp(temp_arch));*/
 	}
+#ifdef __crayxmp
+	{
+#else
+	if (getenv("CRAYXMP_COS") != NULL || getenv("__crayxmp") != NULL) {
+#endif
+                int argc2;
+		char **argv2;
+		int i;
+                int i2;
+		struct stat statBuf;
+
+                argc2 = argc + 1;
+                if (app_fl) {
+			if (stat(argv[2], &statBuf) == -1) {
+				app_fl = FALSE;
+			}
+			else {
+				argc2 += 1;
+			}
+		}
+                if (show_fl) argc2 += 2;
+		argv2 = (char **)malloc(argc2 * sizeof(char *));
+                i2 = 0;
+		argv2[i2++] = "lib";
+		if (show_fl) {
+			argv2[i2++] = "-l";
+			argv2[i2++] = "-";
+		}
+		argv2[i2++] = "-o";
+		if (app_fl) argv2[i2++] = argv[2];
+		for (i = 2; i < argc; i++) argv2[i2++] = argv[i];
+		argv2[i2] = NULL;
+		execvp("lib", argv2);
+		exit(1);
+	}
 #ifdef AAL
 	tab = (struct ranlib *) malloc(512 * sizeof(struct ranlib));
 	tstrtab = malloc(4096);

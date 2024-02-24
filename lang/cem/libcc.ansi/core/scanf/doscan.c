@@ -157,7 +157,7 @@ static char* f_collect(register int c, register int width)
 	{
 		if (width && c != EOF)
 			_doscan_unget(c);
-		return inp_buf - 1;
+		return NULL;
 	}
 	else
 		digit_seen = 0;
@@ -184,7 +184,7 @@ static char* f_collect(register int c, register int width)
 		{
 			if (width && c != EOF)
 				_doscan_unget(c);
-			return inp_buf - 1;
+			return NULL;
 		}
 	}
 
@@ -510,7 +510,7 @@ int _doscan(const char* format, va_list ap)
 					return done;
 				str = f_collect(ic, width);
 
-				if (str < inp_buf
+				if (str == NULL
 				    || (str == inp_buf
 				           && (*str == '-'
 				                  || *str == '+')))

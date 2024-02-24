@@ -11,13 +11,14 @@
    bytes. In this case, these routines may become obsolete. ???
 */
 
-#include "ext_fmt.h"
 #include <float.h>
 #include <errno.h>
 #include <ctype.h>
 #include <ack/config.h>
 
 #if ACKCONF_WANT_FLOAT
+
+#include "ext_fmt.h"
 
 static int b64_add(struct mantissa* e1, struct mantissa* e2);
 static b64_sft(struct mantissa* e1, int n);
@@ -788,7 +789,6 @@ void _dbl_ext_cvt(double value, struct EXTEND* e)
 	/*	Convert double to extended
 	*/
 	int exponent;
-
 	value = frexp(value, &exponent);
 	e->sign = value < 0.0;
 	if (e->sign)
@@ -810,7 +810,6 @@ _ext_dbl_cvt(struct EXTEND* e)
 	*/
 	double f;
 	int sign = e->sign;
-
 	e->sign = 0;
 	if (e->m1 == 0 && e->m2 == 0)
 	{
@@ -836,4 +835,4 @@ _ext_dbl_cvt(struct EXTEND* e)
 	return f;
 }
 
-#endif
+#endif /* ACKCONF_WANT_FLOAT */

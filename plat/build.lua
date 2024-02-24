@@ -20,11 +20,11 @@ definerule("ackfile",
 			name = e.name,
 			srcs = e.srcs,
 			deps = {
-				"lang/b/compiler+pkg",
+--				"lang/b/compiler+pkg",
 				"lang/basic/src+pkg",
 				"lang/cem/cemcom.ansi+pkg",
 				"lang/cem/cpp.ansi+pkg",
-				"lang/m2/comp+pkg",
+--				"lang/m2/comp+pkg",
 				"lang/pc/comp+pkg",
 				"plat/"..plat.."+tools",
 				"util/ack+pkg",
@@ -133,15 +133,19 @@ definerule("build_plat_libs",
 	},
 	function(e)
 		local installmap = {
-			"lang/b/lib+pkg_"..e.plat,
+--			"lang/b/lib+pkg_"..e.plat,
 			"lang/basic/lib+pkg_"..e.plat,
 			"lang/cem/libcc.ansi+pkg_"..e.plat,
-			"lang/m2/libm2+pkg_"..e.plat,
+--			"lang/m2/libm2+pkg_"..e.plat,
 			"lang/pc/libpc+pkg_"..e.plat,
-			"lang/b/lib+pkg_"..e.plat,
+--			"lang/b/lib+pkg_"..e.plat,
 			["$(PLATIND)/"..e.plat.."/libem.a"] = "mach/"..e.arch.."/libem+lib_"..e.plat,
-			["$(PLATIND)/"..e.plat.."/libend.a"] = "mach/"..e.arch.."/libend+lib_"..e.plat,
+--			["$(PLATIND)/"..e.plat.."/libend.a"] = "mach/"..e.arch.."/libend+lib_"..e.plat,
 		}
+		-- all platforms except COS need libend.a
+		if e.plat ~= "cos" then
+			installmap["$(PLATIND)/"..e.plat.."/libend.a"] = "mach/"..e.arch.."/libend+lib_"..e.plat
+		end
 
 		-- For now, only cpm uses software floating-point.
 		if e.plat == "cpm" then

@@ -44,19 +44,10 @@ lang/m2
 lang/basic
 
 mach/proto
-mach/i80
-mach/i86
-mach/i386
-mach/m68020
-mach/vc4
+mach/crayxmp
 
 plat
-plat/cpm
-plat/pc86
-plat/linux
-plat/linux386
-plat/linux68k
-plat/rpi
+plat/cos
 
 examples
 man

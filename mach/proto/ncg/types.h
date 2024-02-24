@@ -10,10 +10,12 @@ TEM_WSIZE should be defined at this point
 #ifndef TEM_PSIZE
 TEM_PSIZE should be defined at this point
 #endif
+/*
 #if TEM_WSIZE>4 || TEM_PSIZE>4
 Implementation will not be correct unless a long integer
 has more then 4 bytes of precision.
 #endif
+*/
 
 typedef char byte;
 typedef char * string;

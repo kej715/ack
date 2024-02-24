@@ -17,7 +17,7 @@ typedef struct expr {
 #define TYPADDR 3
 #define TYPREG  4
 
-int ex_lookup(int operator, int lnode, int rnode);
+int ex_lookup(int operator, long lnode, long rnode);
 void initnodes(void);
 expr_t regvar_expr(expr_t e, int regtyp, int regsiz);
 expr_t iextoaddr(expr_t e);
@@ -31,7 +31,7 @@ int membset(int setno, char *name, short *regset, char *appearance, int restyp, 
 void subregset(register short *sp, int subreg, register short *regset);
 expr_t subreg_expr(int tokarg, int subreg);
 expr_t ident_expr(char *name);
-expr_t make_expr(int type, int operator, int op1, int op2);
+expr_t make_expr(int type, int operator, long op1, long op2);
 int b_expr(expr_t e);
 int i_expr(expr_t e);
 

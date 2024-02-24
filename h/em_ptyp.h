@@ -5,7 +5,7 @@
  */
 #define	ptyp(x)		(1<<(x-sp_fspec))
 
-#define	cst_ptyp	(ptyp(sp_cst2)|ptyp(sp_cst4))
+#define	cst_ptyp	(ptyp(sp_cst2)|ptyp(sp_cst4)|ptyp(sp_cst8))
 #define nof_ptyp	(ptyp(sp_dlb1)|ptyp(sp_dlb2)|ptyp(sp_doff))
 #define sof_ptyp	(ptyp(sp_dnam)|ptyp(sp_doff))
 #define lab_ptyp	(ptyp(sp_dlb1)|ptyp(sp_dlb2)|ptyp(sp_dnam))

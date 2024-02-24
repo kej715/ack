@@ -81,6 +81,13 @@ _pscien(long double r, register char* s, int n, int flags)
 	{
 		*s++ = '+';
 	}
+#if defined(__crayxmp)
+	if (dp >= 1000)
+	{
+		*s++ = '0' + (dp / 1000);
+		dp %= 1000;
+	}
+#endif
 	if (dp >= 100)
 	{
 		*s++ = '0' + (dp / 100);
@@ -91,7 +98,7 @@ _pscien(long double r, register char* s, int n, int flags)
 	return s;
 }
 
-#define NDIGINEXP(exp) (((exp) >= 100 || (exp) <= -100) ? 3 : 2)
+#define NDIGINEXP(exp) (((exp) >= 1000 || (exp) <= -1000) ? 4 : ((exp) >= 100 || (exp) <= -100) ? 3 : 2)
 #define LOW_EXP -4
 #define USE_EXP(exp, ndigits) (((exp) < LOW_EXP + 1) || (exp >= ndigits + 1))
 

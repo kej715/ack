@@ -21,7 +21,9 @@
 #define out(s)
 #endif
 
-#define fit16i(x)	((x) >= -32768L && (x) <= 32767L)
+#define fit16i(x)       (((x) & ~0x7FFFUL) == 0)
+#define fit32i(x)       (((x) & ~0x7FFFFFFFUL) == 0)
+#define fit8u(x)        (((x) & ~0xFFUL) == 0)
 
 #define HSIZE	256	/* Size of hashtable for mnemonics */
 
@@ -293,15 +295,15 @@ PRIVATE int getnumber(register int c, register struct e_arg *ap)
 	if (! isdigit(c)) {
 		ungetbyte(c);
 		syntax("digit expected");
-		return sp_cst4;
+		return sp_cst8;
 	}
 
-	n = sp_cst4;
+	n = sp_cst8;
 
 	for (;;) {
 		if (p >= &(str[256])) {
 			syntax("number too long");
-			return sp_cst4;
+			return sp_cst8;
 		}
 
 		*p++ = c;
@@ -354,21 +356,21 @@ PRIVATE int getnumber(register int c, register struct e_arg *ap)
 
 	ungetbyte(c);
 	ap->ema_cst = (arith) str2long(str, 10);
-	return sp_cst4;
+	return sp_cst8;
 }
 
 
 PRIVATE int getfactor(register int c, register struct e_arg *ap)
 {
 	if (c == '(') {
-		if (getexpr(nospace(), ap) != sp_cst4) {
+		if (getexpr(nospace(), ap) != sp_cst8) {
 			syntax("expression expected");
 		}
 		else if ((c = nospace()) != ')') {
 			ungetbyte(c);
 			syntax("')' expected");
 		}
-		return sp_cst4;
+		return sp_cst8;
 	}
 	return getnumber(c, ap);
 }
@@ -377,7 +379,7 @@ PRIVATE int getterm(register int c, register struct e_arg *ap)
 {
 	arith left;
 
-	if ((c = getfactor(c, ap)) != sp_cst4) return c;
+	if ((c = getfactor(c, ap)) != sp_cst8) return c;
 
 	for (;;) {
 		if ((c = nospace()) != '*' && c != '/' && c != '%') {
@@ -386,7 +388,7 @@ PRIVATE int getterm(register int c, register struct e_arg *ap)
 		}
 
 		left = ap->ema_cst;
-		if (getfactor(nospace(), ap) != sp_cst4) {
+		if (getfactor(nospace(), ap) != sp_cst8) {
 			syntax("factor expected");
 			break;
 		}
@@ -395,14 +397,14 @@ PRIVATE int getterm(register int c, register struct e_arg *ap)
 		else if (c == '/') ap->ema_cst = left / ap->ema_cst;
 		else	ap->ema_cst = left % ap->ema_cst;
 	}
-	return sp_cst4;
+	return sp_cst8;
 }
 
 PRIVATE int getexpr(register int c, register struct e_arg *ap)
 {
 	arith left;
 
-	if ((c = getterm(c, ap)) != sp_cst4) return c;
+	if ((c = getterm(c, ap)) != sp_cst8) return c;
 
 	for (;;) {
 		if ((c = nospace()) != '+' && c != '-') {
@@ -411,7 +413,7 @@ PRIVATE int getexpr(register int c, register struct e_arg *ap)
 		}
 
 		left = ap->ema_cst;
-		if (getterm(nospace(), ap) != sp_cst4) {
+		if (getterm(nospace(), ap) != sp_cst8) {
 			syntax("term expected");
 			break;
 		}
@@ -419,14 +421,14 @@ PRIVATE int getexpr(register int c, register struct e_arg *ap)
 		if (c == '+') ap->ema_cst += left;
 		else ap->ema_cst = left - ap->ema_cst;
 	}
-	return sp_cst4;
+	return sp_cst8;
 }
 
 PRIVATE int get15u(void)
 {
 	struct e_arg dummy;
 
-	if (getnumber(getbyte(), &dummy) != sp_cst4) {
+	if (getnumber(getbyte(), &dummy) != sp_cst8) {
 		syntax("integer expected");
 	}
 	else check((dummy.ema_cst & ~077777) == 0);
@@ -446,7 +448,12 @@ PRIVATE void gettyp(int typset, register struct e_arg *ap)
 	else if (isdigit(c) || c == '+' || c == '-' || c == '(') {
 		out("expr\n");
 		argtyp = getexpr(c, ap);
-		if (argtyp == sp_cst4 && fit16i(ap->ema_cst)) argtyp = sp_cst2;
+		if (argtyp == sp_cst8) {
+			if (fit16i(ap->ema_cst))
+				argtyp = sp_cst2;
+			else if (fit32i(ap->ema_cst))
+				argtyp = sp_cst4;
+		}
 	}
 	else if (isalpha(c) || c == '_') {
 		out("name\n");
@@ -573,7 +580,7 @@ PRIVATE void line_line(void)
 	char *btscpy();
 	struct e_arg dummy;
 
-	gettyp(ptyp(sp_cst2), &dummy);
+	gettyp(ptyp(sp_cst2)|ptyp(sp_cst4)|ptyp(sp_cst8), &dummy);
 	EM_lineno = dummy.ema_cst;
 	gettyp(str_ptyp, &dummy);
 	btscpy(filebuf, dummy.ema_string, (int) dummy.ema_szoroff);

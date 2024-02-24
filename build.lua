@@ -6,27 +6,29 @@ vars.ackcflags = {
 }
 vars.ackldflags = {}
 vars.plats = {
-	"cpm",
-	"linux386",
-	"linux68k",
-	"linuxppc",
-	"linuxmips",
-	"msdos86",
-	"msdos386",
-	"osx386",
-	"osxppc",
-	"pc86",
-	"rpi",
-	"pdpv7",
-	"em22",
+	"cos",
+	--"cpm",
+	--"linux386",
+	--"linux68k",
+	--"linuxppc",
+	--"linuxmips",
+	--"msdos86",
+	--"msdos386",
+	--"osx386",
+	--"osxppc",
+	--"pc86",
+	--"rpi",
+	--"pdpv7",
+	--"em22",
 }
 vars.plats_with_tests = {
-	"cpm",
-	"linux68k",
+	--"cos",
+	--"cpm",
+	--"linux68k",
 	--"linux386",
-	"linuxppc",
+	--"linuxppc",
 	--"linuxmips",
-	"pc86",
+	--"pc86",
 }
 
 local is_windows = os.getenv("OS") == "Windows_NT"
@@ -41,9 +43,9 @@ installable {
 	map = {
 		"lang/basic/src+pkg",
 		"lang/cem/cemcom.ansi+pkg",
-		"lang/m2/comp+pkg",
+--		"lang/m2/comp+pkg",
 		"lang/pc/comp+pkg",
-		"lang/b/compiler+pkg",
+--		"lang/b/compiler+pkg",
 		"util/ack+pkg",
 		"util/amisc+pkg",
 		"util/arch+pkg",
@@ -78,7 +80,7 @@ installable {
 	name = "ack",
 	map = {
 		"+ack-common",
-		"examples+pkg",
+--		"examples+pkg",
 		plat_packages
 	},
 }

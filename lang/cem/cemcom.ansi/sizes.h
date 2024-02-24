@@ -30,9 +30,12 @@ extern arith max_int, max_unsigned;	/* cstoper.c	*/
 #if SZ_INT == 2
 #define max_int		((arith)32767)
 #define max_unsigned	((arith)65535)
-#else /* SZ_INT == 4 */
+#elif SZ_INT == 4
 #define max_int		((arith)2147483647)
 #define max_unsigned	((arith)4294967295)
+#else
+#define max_int		((arith)0x7fffffffffffffff)
+#define max_unsigned	((arith)0xffffffffffffffff)
 #endif
 #endif /* NOCROSS */
 

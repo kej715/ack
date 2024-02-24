@@ -23,7 +23,8 @@
 #include "bits.h"
 #include "skip.h"
 
-char _obuf[OBUFSIZE];
+static char _obuf[OBUFSIZE];
+static char *obp;
 #ifdef DOBITS
 char bits[128];
 #endif
@@ -128,28 +129,49 @@ void do_pragma(void)
 
 char Xbuf[256];
 
+#define flush(X) (sys_write(STDOUT, _obuf, X))
+#define echo(ch)			\
+	if (obp >= _obuf + OBUFSIZE)	\
+	{				\
+		Xflush();		\
+		obp = _obuf;		\
+	}				\
+	*obp++ = (ch);
+#define newline()	\
+	obp--;		\
+	while (obp >= _obuf && (*obp == ' ' || *obp == '\t')) obp--; \
+	obp++;		\
+	echo('\n')
+
+static void do_line_dir(int *lineno, char **fn)
+{
+	if (*lineno != LineNumber || *fn != FileName)
+	{
+		*fn = FileName;
+		*lineno = LineNumber;
+		if (!options['P'])
+		{
+			register char* p = Xbuf;
+			sprintf(Xbuf, "%s %d \"%s\"\n", LINE_PREFIX, LineNumber, FileName);
+			obp--;
+			while (obp >= _obuf && (class(*obp) == STSKIP || *obp == '\n')) obp--;
+			obp++;
+			newline();
+			while (*p)
+			{
+				echo(*p++);
+			}
+		}
+	}
+}
+
 void preprocess(char *fn)
 {
 	register int c;
-	register char* op = _obuf;
-	register char* ob = &_obuf[OBUFSIZE];
 	int lineno = 0;
 	int startline;
 
-#define flush(X) (sys_write(STDOUT, _obuf, X))
-#define echo(ch)                                                                                   \
-	if (op == ob)                                                                                  \
-	{                                                                                              \
-		Xflush();                                                                                  \
-		op = _obuf;                                                                                \
-	}                                                                                              \
-	*op++ = (ch);
-#define newline()                                                                                  \
-	op--;                                                                                          \
-	while (op >= _obuf && (*op == ' ' || *op == '\t'))                                             \
-		op--;                                                                                      \
-	op++;                                                                                          \
-	echo('\n')
+	obp = _obuf;
 
 	if (!options['P'])
 	{
@@ -158,32 +180,11 @@ void preprocess(char *fn)
 		*/
 		register char* p = Xbuf;
 
-		sprint(p, "%s 1 \"%s\"\n", LINE_PREFIX, FileName);
+		sprintf(Xbuf, "%s 1 \"%s\"\n", LINE_PREFIX, FileName);
 		while (*p)
 		{
 			echo(*p++);
 		}
-	}
-
-#define do_line_dir(lineno, fn)                                                                    \
-	if (lineno != LineNumber || fn != FileName)                                                    \
-	{                                                                                              \
-		fn = FileName;                                                                             \
-		lineno = LineNumber;                                                                       \
-		if (!options['P'])                                                                         \
-		{                                                                                          \
-			register char* p = Xbuf;                                                               \
-			sprint(Xbuf, "%s %d \"%s\"\n", LINE_PREFIX, (int)LineNumber, FileName);                \
-			op--;                                                                                  \
-			while (op >= _obuf && (class(*op) == STSKIP || *op == '\n'))                           \
-				op--;                                                                              \
-			op++;                                                                                  \
-			newline();                                                                             \
-			while (*p)                                                                             \
-			{                                                                                      \
-				echo(*p++);                                                                        \
-			}                                                                                      \
-		}                                                                                          \
 	}
 
 	for (;;)
@@ -207,7 +208,7 @@ void preprocess(char *fn)
 
 					LineNumber = pragma_tab[i].pr_linnr;
 					FileName = pragma_tab[i].pr_fil;
-					do_line_dir(lineno, fn);
+					do_line_dir(&lineno, &fn);
 					while (*c_ptr)
 					{
 						echo(*c_ptr++);
@@ -227,7 +228,7 @@ void preprocess(char *fn)
 				pragma_nr = 0;
 				LineNumber = LiNo;
 				FileName = FiNam;
-				do_line_dir(lineno, fn);
+				do_line_dir(&lineno, &fn);
 			}
 
 			while (class(c) == STSKIP || c == '/')
@@ -239,9 +240,8 @@ void preprocess(char *fn)
 						c = GetChar();
 						if (c == '*')
 						{
-							op = SkipComment(op, &lineno);
-							if (!op)
-								return;
+							obp = SkipComment(obp, &lineno);
+							if (!obp) return;
 							if (!options['C'])
 							{
 								echo(' ');
@@ -269,13 +269,13 @@ void preprocess(char *fn)
 				domacro();
 				lineno++;
 				newline();
-				do_line_dir(lineno, fn);
+				do_line_dir(&lineno, &fn);
 				c = GetChar();
 			}
 			else
 				startline = 0;
 		}
-		do_line_dir(lineno, fn);
+		do_line_dir(&lineno, &fn);
 		for (;;)
 		{
 
@@ -285,7 +285,7 @@ void preprocess(char *fn)
 				if (c == EOI)
 				{
 					newline();
-					flush((int)(op - _obuf));
+					flush((int)(obp - _obuf));
 					return;
 				}
 				fatal("non-ascii character read");
@@ -297,9 +297,8 @@ void preprocess(char *fn)
 				c = GetChar();
 				if (c == '*')
 				{
-					op = SkipComment(op, &lineno);
-					if (!op)
-						return;
+					obp = SkipComment(obp, &lineno);
+					if (!obp) return;
 					if (!options['C'])
 					{
 						echo(' ');
@@ -342,7 +341,7 @@ void preprocess(char *fn)
 						else if (c == EOI)
 						{
 							newline();
-							flush((int)(op - _obuf));
+							flush((int)(obp - _obuf));
 							return;
 						}
 						if (c == '\\')
@@ -542,7 +541,6 @@ void preprocess(char *fn)
 
 static char* SkipComment(char *op, int *lineno)
 {
-	char* ob = &_obuf[OBUFSIZE];
 	register int c, oldc = '\0';
 
 	NoUnstack++;

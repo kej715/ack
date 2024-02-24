@@ -5,7 +5,7 @@
 
 # What platform to build for by default?
 
-DEFAULT_PLATFORM ?= pc86
+DEFAULT_PLATFORM ?= cos
 
 # Where should the ACK put its temporary files?
 
@@ -28,7 +28,7 @@ BUILDDIR ?= $(ACK_TEMP_DIR)/ack-build
 
 # What build flags do you want to use for native code?
 
-CFLAGS ?= -g -Wno-return-type
+CFLAGS ?= -g -O0 -Wno-return-type
 LDFLAGS ?= 
 
 # Various commands.

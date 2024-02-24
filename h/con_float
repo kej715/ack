@@ -11,11 +11,12 @@
 
    #define IEEEFLOAT for machines using IEEE floating point format
    #define PDPFLOAT for machines using the PDP-11 floating point format
+   #define CRAYFLOAT for machines using the CRAY-1 / CRAY X-MP format
    If none of these are defined, the format of the machine on which the
    code generator runs is used.
    Returns 1 if sz has an illegal value, 2 in case of overflow,
    and 0 if all went well.
-   If neither IEEEFLOAT nor PDPFLOAT are defined, the return value is not
+   If non of IEEEFLOAT, PDPFLOAT, or CRAYFLOAT are defined, the return value is not
    trustworthy.
 
    Unfortunately, the IEEE standard does not define the byte-order.
@@ -35,6 +36,15 @@
 #define FL_MSW_AT_LOW_ADDRESS 1
 #undef FL_MSB_AT_LOW_ADDRESS
 #define FL_MSB_AT_LOW_ADDRESS 0
+#endif
+#ifdef CRAYFLOAT
+#define USE_FLT
+#undef FL_MSL_AT_LOW_ADDRESS
+#define FL_MSL_AT_LOW_ADDRESS 1
+#undef FL_MSW_AT_LOW_ADDRESS
+#define FL_MSW_AT_LOW_ADDRESS 1
+#undef FL_MSB_AT_LOW_ADDRESS
+#define FL_MSB_AT_LOW_ADDRESS 1
 #endif
 
 #define I0                                                                                         \
@@ -107,6 +117,45 @@ static int float_cst(const char *float_str, int sz, char *buf)
 		return 1;
 	}
 	flt_str2flt(float_str, &e);
+#ifdef CRAYFLOAT
+	e.flt_exp += 040000;
+	if (e.flt_mantissa.flt_l_32 & 0x8000)
+	{
+		/* rounding */
+		if ((e.flt_mantissa.flt_l_32 & 0xffff0000) == 0xffff0000)
+		{
+			e.flt_mantissa.flt_l_32 = 0;
+			if (e.flt_mantissa.flt_h_32 == 0xffffffff)
+			{
+				e.flt_exp++;
+				e.flt_mantissa.flt_h_32 = 0x80000000;
+			}
+			else
+				e.flt_mantissa.flt_h_32++;
+		}
+		else
+		{
+				e.flt_mantissa.flt_l_32 += 0x8000;
+		}
+	}
+	if (e.flt_exp > 057777)
+	{
+		overflow = 1;
+		e.flt_exp = 060000;
+		e.flt_mantissa.flt_h_32 = e.flt_mantissa.flt_l_32 = 0xffffffff;
+	}
+	buf[0] = (e.flt_sign << 7) | ((e.flt_exp >> 8) & 0x7f);
+	buf[1] = e.flt_exp;
+	buf[2] = e.flt_mantissa.flt_h_32 >> 24;
+	buf[3] = e.flt_mantissa.flt_h_32 >> 16;
+	buf[4] = e.flt_mantissa.flt_h_32 >> 8;
+	buf[5] = e.flt_mantissa.flt_h_32;
+	buf[6] = e.flt_mantissa.flt_l_32 >> 24;
+	buf[7] = e.flt_mantissa.flt_l_32 >> 16;
+	flt_b64_sft(&(e.flt_mantissa), -48);
+
+#else /* CRAYFLOAT */
+
 #ifdef IEEEFLOAT
 	if (sz == 4)
 	{
@@ -265,6 +314,8 @@ static int float_cst(const char *float_str, int sz, char *buf)
 		buf[I7] = buf[I3];
 	}
 #endif
+#endif /* CRAYFLOAT */
+
 	if (overflow)
 	{
 		return 2;
@@ -276,6 +327,9 @@ static int float_cst(const char *float_str, int sz, char *buf)
 #ifdef CODE_GENERATOR
 void con_float(void)
 {
+#ifdef CRAYFLOAT
+	fprintf(codefile, "data %s\n", str);
+#else
 	char buf[8];
 	int rval = float_cst(str, (int)argval, buf);
 	int i;
@@ -299,6 +353,7 @@ void con_float(void)
 		fprintf(codefile, ",0%o", buf[i] & 0377);
 	}
 	putc('\n', codefile);
+#endif
 }
 #endif /* CODE_GENERATOR */
 

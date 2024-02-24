@@ -51,7 +51,7 @@ void inithash(void);
 unsigned hashname(register char *name);
 void enter(char *name,int value);
 int mlookup(char* name);
-int lookup(int comm,int operator,int lnode,int rnode);
+int lookup(int comm,int operator,long lnode,long rnode);
 void printnodes(void);
 void initio(void);
 void outpat(int exprno, int instrno);
@@ -169,7 +169,7 @@ optexpr	:	/* empty */
 expr	:	'$' argno
 			{ $$ = lookup(0,EX_ARG,$2,0); }
 	|	NUMBER
-			{ $$ = lookup(0,EX_CON,(int)(short)$1,0); }
+			{ $$ = lookup(0,EX_CON,$1,0); }
 	|	PSIZE
 			{ $$ = lookup(0,EX_POINTERSIZE,0,0); }
 	|	WSIZE
@@ -321,7 +321,7 @@ void yyerror(const char *s)
 	nerrors++;
 }
 
-int lookup(int comm,int operator,int lnode,int rnode) {
+int lookup(int comm,int operator,long lnode,long rnode) {
 
 	register expr_p p;
 

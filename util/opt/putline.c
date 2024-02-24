@@ -24,6 +24,10 @@
 
 #define outbyte(b) putc(b,outfile)
 
+#define fit16i(x)       (((x) & ~0x7FFFUL) == 0)
+#define fit32i(x)       (((x) & ~0x7FFFFFFFUL) == 0)
+#define fit8u(x)        (((x) & ~0xFFUL) == 0)
+
 /* Forward declarations. */
 static void numlab(register num_p);
 static void putargs(register arg_p);
@@ -323,15 +327,26 @@ void outinst(int m)
 void outoff(offset off)
 {
 #ifdef LONGOFF
-	if ((short) off == off)
+	if (fit8u(off))
+	{
 #endif
 		outint((short) off);
 #ifdef LONGOFF
+	}
 	else
+	if (fit32i(off))
 	{
 		outbyte((byte) sp_cst4);
-		outshort((short) (off & 0177777L));
+		outshort((short) (off & 0xFFFFL));
 		outshort((short) (off >> 16));
+	}
+	else
+	{
+		outbyte((byte) sp_cst8);
+		outshort((short) (off & 0xFFFFL));
+		outshort((short) ((off >> 16) & 0xFFFFL));
+		outshort((short) ((off >> 32) & 0xFFFFL));
+		outshort((short) ((off >> 48) & 0xFFFFL));
 	}
 #endif
 }
@@ -351,7 +366,7 @@ void outint(short i)
 void outshort(short i)
 {
 	outbyte((byte) (i&BMASK));
-	outbyte((byte ) (i >> 8));
+	outbyte((byte) (i >> 8));
 }
 
 static void numlab(register num_p np)

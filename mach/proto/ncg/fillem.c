@@ -69,6 +69,7 @@ static int offtyp;
 static long argval;
 static int dlbval;
 static char *str,argstr[128],labstr[128];
+static char modname[128];
 static unsigned int maxstrsiz;
 static int strsiz;
 static int holno=0;
@@ -102,6 +103,7 @@ static int table2(void);
 static int table3(int);
 static int get16(void);
 static long get32(void);
+static long get64(void);
 static void getstring(void);
 static string strarg(int);
 static void bss(full, int, int);
@@ -112,6 +114,7 @@ static void dumplab(void);
 static void xdumplab(void);
 static void part_flush(void);
 static string holstr(word);
+static void strrep(char *str, char c, char r);
 
 /* Own version of atol that continues computing on overflow.
    We don't know that about the ANSI C one.
@@ -138,7 +141,6 @@ static long our_atol(char *s) {
 #define sp_cstx sp_cst2
 
 void in_init(char *filename) {
-
 	emfile = stdin;
 	if (filename && (emfile=freopen(filename,"rb",stdin))==NULL)
 		error("Can't open %s",filename);
@@ -515,6 +517,10 @@ static int table3(int i) {
 		i = sp_cstx;
 		argval = get32();
 		break;
+	case sp_cst8:
+		i = sp_cstx;
+		argval = get64();
+		break;
 	case sp_dnam:
 	case sp_pnam:
 	case sp_scon:
@@ -555,6 +561,20 @@ static long get32(void) {
 	h_byte = get8() ;
 	if ( h_byte>=128 ) h_byte -= 256 ;
 	return l | (h_byte*256L*256*256L) ;
+}
+
+static long get64(void) {
+	long l;
+
+	l = get8();
+	l |= ((long) get8()) << 8;
+	l |= ((long) get8()) << 16;
+	l |= ((long) get8()) << 24;
+	l |= ((long) get8()) << 32;
+	l |= ((long) get8()) << 40;
+	l |= ((long) get8()) << 48;
+	l |= ((long) get8()) << 56;
+	return l;
 }
 
 static void getstring(void) {
@@ -753,6 +773,12 @@ static string holstr(word n) {
 
 	sprintf(str,hol_off,n,holno);
 	return(mystrcpy(str));
+}
+
+static void strrep(char *str, char c, char r) {
+        while (*str++) {
+		if (*str == c) *str = r;
+        }
 }
 
 

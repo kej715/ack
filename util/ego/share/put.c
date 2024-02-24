@@ -91,8 +91,10 @@ STATIC void putstr(argb_p abp) {
 
 void outoff(offset off) {
 
-	outshort( (short) (off&0177777L) );
-	outshort( (short) (off>>16) );
+	outshort( (short) (off & 0xFFFF) );
+	outshort( (short) ((off >> 16) & 0xFFFF));
+	outshort( (short) ((off >> 32) & 0xFFFF));
+	outshort( (short) ((off >> 48) & 0xFFFF));
 }
 
 

@@ -1000,7 +1000,7 @@ allreg
 
 expr
 	: NUMBER
-		{ $$ = make_expr(TYPINT,EX_CON, (int) ($1 & 0xFFFF), (int) ($1>>16));
+		{ $$ = make_expr(TYPINT,EX_CON, $1, 0);
 		}
 	| emarg
 		{ $$ = make_expr(argtyp(emmnem[$1-1]),EX_ARG,$1,0); }

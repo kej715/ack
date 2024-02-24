@@ -55,8 +55,10 @@ offset getoff()
 {
 	register offset n;
 
-	n = getshort() & 0xFFFF;
-	n |= ((offset) getshort() ) << 16;
+	n  =  ((offset) getshort()) & 0xFFFF;
+	n |= (((offset) getshort()) & 0xFFFF) << 16;
+	n |= (((offset) getshort()) & 0xFFFF) << 32;
+	n |= (((offset) getshort()) & 0xFFFF) << 48;
 	return n;
 }
 

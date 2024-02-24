@@ -48,6 +48,18 @@
 #define MAXSIZE		8	/* the maximum of the SZ_* constants	*/
 
 /* target machine sizes	*/
+#if defined(__crayxmp)
+#define	SZ_CHAR		(arith)1
+#define	SZ_SHORT	(arith)2
+#define SZ_WORD		(arith)8
+#define	SZ_INT		(arith)8
+#define	SZ_LONG		(arith)8
+#ifndef NOFLOAT
+#define	SZ_FLOAT	(arith)8
+#define	SZ_DOUBLE	(arith)8
+#endif /* NOFLOAT */
+#define	SZ_POINTER	(arith)8
+#else
 #define	SZ_CHAR		(arith)1
 #define	SZ_SHORT	(arith)2
 #define SZ_WORD		(arith)4
@@ -58,6 +70,7 @@
 #define	SZ_DOUBLE	(arith)8
 #endif /* NOFLOAT */
 #define	SZ_POINTER	(arith)4
+#endif
 
 /* target machine alignment requirements	*/
 #define	AL_CHAR		1

@@ -19,6 +19,10 @@
 
 #define outbyte(b) putc(b,outfile)
 
+#define fit16i(x)       (((x) & ~0x7FFFUL) == 0)
+#define fit32i(x)       (((x) & ~0x7FFFFFFFUL) == 0)
+#define fit8u(x)        (((x) & ~0xFFUL) == 0)
+
 FILE *outfile;
 
 STATIC proc_p thispro;
@@ -46,12 +50,20 @@ STATIC void coutint(short i) {
 
 STATIC void coutoff(offset off) {
 
-	if ((short) off == off)
+	if (fit8u(off)) {
 		coutint((short) off);
-	else {
+	}
+	else if (fit32i(off)) {
 		outbyte( (byte) sp_cst4) ;
-		coutshort( (short) (off&0177777L) );
+		coutshort( (short) (off&0xFFFFL) );
 		coutshort( (short) (off>>16) );
+	}
+	else {
+		outbyte( (byte) sp_cst8) ;
+		coutshort( (short) (off&0xFFFFL) );
+		coutshort( (short) ((off>>16) & 0xFFFFL) );
+		coutshort( (short) ((off>>32) & 0xFFFFL) );
+		coutshort( (short) ((off>>48) & 0xFFFFL) );
 	}
 }
 

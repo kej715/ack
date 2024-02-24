@@ -5,8 +5,7 @@
 
 
 #define	ERROUT		STDERR	/* file pointer for writing messages	*/
-#define	MAXERR_LINE	5	/* maximum number of error messages given
-					on the same input line.		*/
+#define	MAXERR_LINE	5	/* maximum number of error messages given on the same input line. */
 
 
 #define	IDFSIZE	64	/* maximum significant length of an identifier	*/
@@ -26,8 +25,7 @@
 #define	ARGBUF	128	/* initial size of macro parameter buffer(s)	*/
 
 
-#define ISTRSIZE	16	/* minimum number of bytes allocated for
-					storing a string		*/
+#define ISTRSIZE	16	/* minimum number of bytes allocated for storing a string */
 
 
 #if 0
@@ -59,9 +57,6 @@
 #define DOBITS		1	/* use trick to reduce symboltable accesses */
 
 
-#define LINE_PREFIX	"#"	/* prefix for generated line directives,
-				   either "#" or "#line"
-				*/
+#define LINE_PREFIX	"#"	/* prefix for generated line directives, either "#" or "#line" */
 
 #endif
-

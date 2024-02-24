@@ -34,6 +34,21 @@ PRIVATE arith get32(void)
 	return l | ((arith) h_byte << 24);
 }
 
+PRIVATE arith get64(void)
+{
+	register arith l;
+
+	l = getbyte();
+	l |= ((arith) getbyte() << 8);
+	l |= ((arith) getbyte() << 16);
+	l |= ((arith) getbyte() << 24);
+	l |= ((arith) getbyte() << 32);
+	l |= ((arith) getbyte() << 40);
+	l |= ((arith) getbyte() << 48);
+	l |= ((arith) getbyte() << 56);
+	return l;
+}
+
 PRIVATE struct string *getstring();
 
 /* getarg : read an argument of any type, and check it against "typset"
@@ -97,6 +112,11 @@ PRIVATE void getarg(int typset, register struct e_arg *ap)
 
 	case sp_cst4:	/* A cst encoded in four bytes */
 		ap->ema_cst = get32();
+		ap->ema_argtype = cst_ptyp;
+		break;
+
+	case sp_cst8:	/* A cst encoded in eight bytes */
+		ap->ema_cst = get64();
 		ap->ema_argtype = cst_ptyp;
 		break;
 

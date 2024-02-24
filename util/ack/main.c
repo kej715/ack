@@ -68,6 +68,10 @@ int main(int argc, char** argv)
 #endif
 	}
 	setlist(machine);
+	if ((strcmp(machine, "cos") == 0 || strcmp(machine, "crayxmp") == 0) && setenv("CRAYXMP_COS", "1", 1) == -1)
+	{
+		fuerror("Failed to set envariable CRAYXMP_COS");
+	}
 	/* Find the linker, needed for argument building */
 	scanlist(l_first(tr_list), elem)
 	{

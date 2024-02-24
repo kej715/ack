@@ -168,7 +168,7 @@ void compute(node_p node, result_t *presult) {
 		return;
 	case EX_CON:
 		presult->e_typ = EV_INT;
-		presult->e_v.e_con = ((long) node->ex_rnode << 16) | ((long)node->ex_lnode&0xffff);
+		presult->e_v.e_con = node->ex_lnode;
 		return;
 	case EX_REG:
 		presult->e_typ = EV_REG;
@@ -194,6 +194,9 @@ void compute(node_p node, result_t *presult) {
 	case EX_SFIT:
 	assert(leaf1.e_typ == EV_INT && leaf2.e_typ == EV_INT);
 		mask = 0xFFFFFFFFL;
+		if (sizeof(long) == 8) {
+			mask = (mask << 32) | 0xFFFFFFFFL;
+		}
 		for (i=0;i<leaf2.e_v.e_con-1;i++)
 			mask &= ~(1<<i);
 		tmp = leaf1.e_v.e_con&mask;
@@ -202,6 +205,9 @@ void compute(node_p node, result_t *presult) {
 	case EX_UFIT:
 	assert(leaf1.e_typ == EV_INT && leaf2.e_typ == EV_INT);
 		mask = 0xFFFFFFFFL;
+		if (sizeof(long) == 8) {
+			mask = (mask << 32) | 0xFFFFFFFFL;
+		}
 		for (i=0;i<leaf2.e_v.e_con;i++)
 			mask &= ~(1<<i);
 		presult->e_v.e_con = (leaf1.e_v.e_con&mask)==0;

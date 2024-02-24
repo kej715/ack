@@ -6,7 +6,42 @@
 #if	!defined(_FLOAT_H)
 #define	_FLOAT_H
 
-#if	defined(__vax) || defined(__pdp)
+#if	defined(__crayxmp)
+#define FLT_DIG                 15
+/* TODO: define correct EPSILON for CRAY X-MP instead of using IEEE */
+#define FLT_EPSILON             2.2204460492503131e-16
+#define FLT_MANT_DIG            48
+#define FLT_MAX                 1.0e+2466
+#define FLT_MAX_10_EXP          2466
+#define FLT_MAX_EXP             8191
+#define FLT_MIN                 1.0e-2466
+#define FLT_MIN_10_EXP          (-2466)
+#define FLT_MIN_EXP             (-8192)
+
+#define DBL_DIG                 15
+#define DBL_EPSILON             2.2204460492503131e-16
+#define DBL_MANT_DIG            48
+#define DBL_MAX                 1.0e+2466
+#define DBL_MAX_10_EXP          2466
+#define DBL_MAX_EXP             8191
+#define DBL_MIN                 1.0e-2466
+#define DBL_MIN_10_EXP          (-2466)
+#define DBL_MIN_EXP             (-8192)
+
+#define LDBL_DIG                15
+#define LDBL_EPSILON            2.2204460492503131e-16
+#define LDBL_MANT_DIG           48
+#define LDBL_MAX                1.0e+2466
+#define LDBL_MAX_10_EXP         2466
+#define LDBL_MAX_EXP            8191
+#define LDBL_MIN                1.0e-2466
+#define LDBL_MIN_10_EXP         (-2466)
+#define LDBL_MIN_EXP            (-8192)
+
+#define FLT_ROUNDS              1
+#define FLT_RADIX               2
+
+#elif	defined(__vax) || defined(__pdp)
 #define	FLT_DIG			6
 #define	FLT_EPSILON		5.96046448e-08F
 #define	FLT_MANT_DIG		8

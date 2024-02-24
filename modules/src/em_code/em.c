@@ -308,6 +308,7 @@ void C_pt_ccend(void)
 #define	put8(x)		C_putbyte(x)
 #define	put16(x)	put8((int) x); put8((int) (x >> 8))
 #define	put32(x)	put16((int) x); put16((int) (x >> 16))
+#define	put64(x)	put32((int) x); put32((int) (x >> 32))
 
 /*
 	The C_pt_*() functions serve as formatting functions of the
@@ -323,8 +324,9 @@ void C_magic(void)
 }
 
 /***    the compact code generating routines	***/
-#define	fit16i(x)	((x) >= (long)(-0x8000) && (x) <= (long)0x7FFF)
-#define	fit8u(x)	((x) <= 0xFF)		/* x is already unsigned */
+#define	fit8u(x)	(((x) & ~0xFFUL) == 0)
+#define	fit16i(x)	(((x) & ~0x7FFFUL) == 0)
+#define	fit32i(x)	(((x) & ~0x7FFFFFFFUL) == 0)
 
 void C_pt_ilb(register label l)
 {
@@ -363,9 +365,14 @@ void C_pt_cst(register arith l)
 		put8(sp_cst2);
 		put16((int) l);
 	}
-	else	{
+	else
+	if (fit32i(l)) { /* the cast from long to int causes no trouble here */
 		put8(sp_cst4);
 		put32(l);
+	}
+	else {
+		put8(sp_cst8);
+		put64(l);
 	}
 }
 

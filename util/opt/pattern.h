@@ -29,8 +29,8 @@
 
 struct exprnode {
 	short ex_operator;
-	short ex_lnode;
-	short ex_rnode;
+	long ex_lnode;
+	long ex_rnode;
 };
 typedef struct exprnode expr_t;
 typedef struct exprnode *expr_p;

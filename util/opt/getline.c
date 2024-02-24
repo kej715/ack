@@ -68,15 +68,30 @@ short readshort(void)
 static offset readoffset(void)
 {
 	register long l;
-	register int h_byte;
+	register long h_byte;
+
+	l = (long) readbyte();
+	l |= ((long) readbyte()) << 8;
+	l |= ((long) readbyte()) << 16;
+	h_byte = (long) readbyte();
+        l |= h_byte << 24;
+	if (h_byte >= 128) l |= ~0xffffffff;
+	return l;
+}
+
+static offset readdbloffset(void)
+{
+	register long l;
 
 	l = readbyte();
-	l |= ((unsigned) readbyte()) * 256;
-	l |= readbyte() * 256L * 256L;
-	h_byte = readbyte();
-	if (h_byte >= 128)
-		h_byte -= 256;
-	return l | (h_byte * 256L * 256 * 256L);
+	l |= ((long) readbyte()) << 8;
+	l |= ((long) readbyte()) << 16;
+	l |= ((long) readbyte()) << 24;
+	l |= ((long) readbyte()) << 32;
+	l |= ((long) readbyte()) << 40;
+	l |= ((long) readbyte()) << 48;
+	l |= ((long) readbyte()) << 56;
+	return l;
 }
 #endif
 
@@ -179,6 +194,9 @@ static int table3(int n)
 #ifdef LONGOFF
 		case sp_cst4:
 			tabval2 = readoffset();
+			return (CSTX2);
+		case sp_cst8:
+			tabval2 = readdbloffset();
 			return (CSTX2);
 #endif
 		case sp_doff:

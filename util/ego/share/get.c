@@ -62,15 +62,17 @@ short getshort(void) {
 
 
 offset getoff(void) {
-	register long l;
-	register int h_byte;
+	register offset l;
 
-	l = getbyte();
-	l |= ((unsigned) getbyte())*256 ;
-	l |= getbyte()*256L*256L ;
-	h_byte = getbyte() ;
-	if ( h_byte>=128 ) h_byte -= 256 ;
-	return l | (h_byte*256L*256*256L) ;
+	l  =  (offset) getbyte();
+	l |= ((offset) getbyte()) << 8 ;
+	l |= ((offset) getbyte()) << 16 ;
+	l |= ((offset) getbyte()) << 24 ;
+	l |= ((offset) getbyte()) << 32 ;
+	l |= ((offset) getbyte()) << 40 ;
+	l |= ((offset) getbyte()) << 48 ;
+	l |= ((offset) getbyte()) << 56 ;
+	return l;
 }
 
 STATIC int getint(void)
