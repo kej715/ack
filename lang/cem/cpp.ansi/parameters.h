@@ -51,7 +51,7 @@
 #endif
 
 
-#define OBUFSIZE	8192	/* output buffer size */
+#define OBUFSIZE	16384	/* output buffer size */
 
 
 #define DOBITS		1	/* use trick to reduce symboltable accesses */

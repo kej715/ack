@@ -3,6 +3,16 @@
 
 #include <sys/types.h>
 
+#define COS_EOR 1
+#define COS_EOF 2
+#define COS_EOD 3
+
+#define COS_SECTOR_SIZE    512
+#define COS_CIO_BUF_SIZE   (COS_SECTOR_SIZE * 2)
+#define COS_MAX_OPEN_FILES 20 /* should match FOPEN_MAX in ack/emufile.h */
+#define COS_UDA_SIZE       128
+#define COS_UDA_SIZE_BYTES (8 * COS_UDA_SIZE)
+
 typedef struct dsp {
     char fname[8];
     u64  first;
@@ -58,14 +68,12 @@ int     _cosopn(ODN *odn, int pd);
 int     _cosrdp(FtEntry *entry, void *uda, int ct);
 int     _cosrew(FtEntry *entry);
 int     _cosrls(ODN *odn);
+void    _cosrst(FtEntry *entry);
 int     _coswdr(FtEntry *entry, void *uda, int ct, int unusedBits);
 int     _coswdp(FtEntry *entry, void *uda, int ct);
 int     _coswed(FtEntry *entry);
 int     _coswef(FtEntry *entry);
 int     _coswer(FtEntry *entry);
-int     _coseod(FtEntry *entry);
-int     _coseof(FtEntry *entry);
-int     _coseor(FtEntry *entry);
 FtEntry *_ftAllo(void);
 DSP     *_ftDsp(int fd);
 int     _ftFlsh(FtEntry *entry);

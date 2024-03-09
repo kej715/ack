@@ -12,7 +12,7 @@ text:    section   code
 *    (SP)   : byte pointer to file table entry
 *
 *  Exit
-*    S7 : number of words written, or -1 if write failed
+*    S7 : 0 if success, -1 if failure
 *
          entry     @%coswed
 @%coswed:ENTER
@@ -22,7 +22,13 @@ text:    section   code
          a2        fte$dsp
          a1        a1+a2
          r         $WEOD          ; perform the write operation
-         s7        s1             ; return status
+         s0        s1
+         jsn       2f             ; if failure
+         s7        0              ; return status
+1:
          RETURN
+2:
+         s7        -1
+         j         1b
 
          end

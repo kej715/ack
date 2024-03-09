@@ -68,6 +68,9 @@ start5:   s1       ,a1       ; get next character from image
           s2       X'2c      ; ','
           s0       s1\s2
           jsz      start7    ; if end of token
+          s2       X'3a      ; ':'
+          s0       s1\s2
+          jsz      start7    ; if end of token
           s2       X'28      ; '('
           s0       s1\s2
           jsz      start7    ; if end of token

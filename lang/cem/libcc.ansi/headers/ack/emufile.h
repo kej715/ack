@@ -46,11 +46,13 @@ extern FILE	__stdin, __stdout, __stderr;
 extern int __fillbuf(FILE *_stream);
 extern int __flushbuf(int _c, FILE *_stream);
 
+#if !defined(__cos)
 #define	getc(p)		(--(p)->_count >= 0 ? (int) (*(p)->_ptr++) : \
 				__fillbuf(p))
 #define	putc(c, p)	(--(p)->_count >= 0 ? \
 			 (int) (*(p)->_ptr++ = (c)) : \
 			 __flushbuf((c),(p)))
+#endif
 
 #define	feof(p)		(((p)->_flags & _IOEOF) != 0)
 #define	ferror(p)	(((p)->_flags & _IOERR) != 0)

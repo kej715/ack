@@ -18,14 +18,14 @@ OPLABEL  LC        R,N
 OPLABEL  =         *
 ISVAL    IFA       VAL,N
 ISPOS    IFE       N,GE,0
-         IFE       N,LE,4194303,1
+         IFE       N,LE,O'7777777,1
          R         N
-         IFE       N,GT,4194303,1
+         IFE       N,GT,O'7777777,1
          R         =N,
 ISPOS    ELSE
-         IFE       N,GE,-4194304,1
+         IFE       N,GE,-O'10000000,1
          R         N
-         IFE       N,LT,-4194304,1
+         IFE       N,LT,-O'10000000,1
          R         =N,
 ISPOS    ENDIF
 ISVAL    ELSE

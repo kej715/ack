@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "files.h"
+#include <sys/files.h>
 
 int _ftFlsh(FtEntry *entry) {
     int i;
@@ -12,17 +12,20 @@ int _ftFlsh(FtEntry *entry) {
 
     wc = (entry->in + 7) >> 3;
     unusedBytes = (8 - (entry->in & 7)) & 7;
-    for (i = 0; i < unusedBytes; i++) entry->uda[entry->in++] = 0;
+    for (i = 0; i < unusedBytes; i++) entry->uda[entry->in + i] = 0;
     if (_coswdr(entry, entry->uda, wc, unusedBytes << 3) != wc) {
         errno = EIO;
         return -1;
     }
-    entry->position += entry->in;
     n = entry->in;
     entry->in = 0;
     entry->isDirty = 0;
 
     return n;
+}
+
+int _coswer(FtEntry *entry) {
+    return _ftFlsh(entry) >= 0 ? 0 : -1;
 }
 
 ssize_t write(int fd, void *buffer, size_t count) {
@@ -49,12 +52,12 @@ ssize_t write(int fd, void *buffer, size_t count) {
             _bcopy(&entry->uda[entry->in], (u8 *)buffer + si, n);
             si += n;
             entry->in += n;
+            entry->position += n;
             if (entry->in >= COS_UDA_SIZE_BYTES) {
                 if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
                     errno = EIO;
                     return -1;
                 }
-                entry->position += COS_UDA_SIZE_BYTES;
                 entry->in = 0;
             }
         }
@@ -65,18 +68,18 @@ ssize_t write(int fd, void *buffer, size_t count) {
         while (bp < limit) {
             byte = *bp++;
             if (byte == '\n') {
+                entry->position += 1;
                 n = _ftFlsh(entry);
                 if (n < 0) return -1;
-                entry->position += 1;
             }
             else {
                 entry->uda[entry->in++] = byte;
+                entry->position += 1;
                 if (entry->in >= COS_UDA_SIZE_BYTES) {
                     if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
                         errno = EIO;
                         return -1;
                     }
-                    entry->position += COS_UDA_SIZE_BYTES;
                     entry->in = 0;
                 }
             }

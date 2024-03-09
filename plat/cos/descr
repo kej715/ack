@@ -52,7 +52,7 @@ name as
 	prep cond
 end
 name ldr
-	from .o
+	from .o.a
 	to .out
 	program ldr
 	args \

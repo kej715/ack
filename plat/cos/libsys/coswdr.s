@@ -31,11 +31,12 @@ text:    section   code
          s2        4,a7           ; get unused bit count
          r         $WWDR          ; perform the write operation
          s0        s1
-         jsn       1f             ; if write operation failed
+         jsn       2f             ; if write operation failed
          s7        a3             ; return count of words written
-         RETURN
 1:
-         s7        -1
          RETURN
+2:
+         s7        -1
+         j         1b
 
          end

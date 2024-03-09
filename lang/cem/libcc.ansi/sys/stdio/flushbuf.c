@@ -12,17 +12,19 @@
 static int
 do_write(int d, char* buf, int nbytes)
 {
-	int c;
+	int n;
 
 	/* POSIX actually allows write() to return a positive value less
 	   than nbytes, so loop ...
 	*/
-	while ((c = write(d, buf, nbytes)) > 0 && c < nbytes)
+	while (nbytes > 0)
 	{
-		nbytes -= c;
-		buf += c;
+		n = write(d, buf, nbytes);
+		if (n < 0) return 0;
+		nbytes -= n;
+		buf += n;
 	}
-	return c > 0;
+	return 1;
 }
 
 int __flushbuf(int c, FILE* stream)

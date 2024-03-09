@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "files.h"
+#include <sys/files.h>
 
 int close(int fd)
 {

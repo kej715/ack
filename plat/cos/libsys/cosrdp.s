@@ -15,6 +15,13 @@ text:    section   code
 *
 *  Exit
 *    S7 : number of words read, or -1 if read failed
+*         Also, on success:
+*           FtEntry.unusedBits  set to number of unused bits in last word
+*           FtEntry.status set as follows:
+*             0 - partial record read
+*             1 - EOR encountered
+*             2 - EOF encountered
+*             3 - EOD encountered
 *
          entry     @%cosrdp
 @%cosrdp:ENTER
@@ -31,16 +38,15 @@ text:    section   code
          s2        1,a7           ; get byte address of FtEntry
          s2        s2>3           ; convert to word address
          a1        s2
-         fte$stat,a1 s0           ; store returned read status
-*                                     < 0 : EOR encountered
-*                                     = 0 : EOF or EOD
-*                                     > 0 : partial record read
          fte$bits,a1 s6           ; store returned unused bit count
          s0        s1
          jsn       1f             ; if read operation failed
          a4        a4-a2          ; calculate number of words read
          s7        a4
          RETURN
+*
+*        Return error status
+*
 1:
          s7        -1
          RETURN

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "files.h"
+#include <sys/files.h>
 
 int open(const char* path, int access, ...)
 {
@@ -14,7 +14,7 @@ int open(const char* path, int access, ...)
     int rc;
 
     len = strlen(path);
-    if (len > 8) {
+    if (len > 7) {
         errno = EINVAL;
         return -1;
     }
@@ -30,9 +30,9 @@ int open(const char* path, int access, ...)
     memcpy(entry->odn.fname, entry->dsp.fname, 8);
     entry->odn.attrs = (4 << 58) | _bp2wp(&entry->dsp);
     entry->access = access;
-    entry->status = 1; /* partial record on last read */
+    entry->status = 0;
 
-    if ((access & O_TRUNC) != 0) {
+    if ((access & O_TRUNC) != 0 && strcmp(path, "$OUT") != 0) {
         _cosrls(&entry->odn);
     }
 

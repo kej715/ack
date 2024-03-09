@@ -2,7 +2,6 @@ acklibrary {
     name = "internal",
     hdrs = {
 		"./cos.h",
-		"./files.h",
 		"./ftentry.h",
 		"./trap.h",
 	}
@@ -80,6 +79,7 @@ acklibrary {
 		"./syslog.s",
 		"./time.c",
 		"./trap.s",
+		"./unlink.c",
 		"./wp2bp.s",
 		"./write.c",
 		generated

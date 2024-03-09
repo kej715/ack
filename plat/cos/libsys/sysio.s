@@ -1,6 +1,6 @@
 #include "cos.h"
 
-TEXT:    SECTION   MIXED
+text:    SECTION   code
 
 **
 *  $REWD - Rewind file

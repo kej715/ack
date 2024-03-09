@@ -7,7 +7,7 @@ int unlink(char *path) {
     ODN odn;
 
     len = strlen(path);
-    if (len > 8) {
+    if (len > 7) {
         errno = EINVAL;
         return -1;
     }

@@ -3,15 +3,16 @@
 
 *
 *  This header defines assembly language equivalences reflecting the
-*  structure of the FtEntry type defined in files.h. If the definition
-*  in files.h changes, this file must be updated to reflect them.
+*  structure of the FtEntry type defined in sys/files.h. If the definition
+*  in sys/files.h changes, this file must be updated to reflect them.
 *
-*  FtEntry is defined in files.h as follows:
+*  FtEntry is defined in sys/files.h as follows:
 *
 *  typedef struct ftEntry {
 *      DSP dsp;                     /* COS DataSet Parameter table        */
 *      ODN odn;                     /* COS Open Dataset Name table        */
-*      u64 status;                  /* status after I/O operation         */
+*      int fd;                      /* file descriptor number             */
+*      int status;                  /* status after I/O operation         */
 *      u64 unusedBits;              /* unused bits in last word of record */
 *      int allocated;               /* 1 if entry allocated for use       */
 *      int access;                  /* file access mode                   */
@@ -19,6 +20,7 @@
 *      int in;                      /* index of next byte to store in uda */
 *      int out;                     /* index of next byte to get from uda */
 *      int isDirty;                 /* 1 if uda has unflushed bytes       */
+*      u64 cioBufAddr;              /* word address of CIO buffer         */
 *      u8  *uda;                    /* user data area                     */
 *  } FtEntry;
 *
@@ -34,6 +36,7 @@ FTE$POS:  = FTE$ACC+1
 FTE$IN:   = FTE$POS+1
 FTE$OUT:  = FTE$IN+1
 FTE$DIRT: = FTE$OUT+1
-FTE$UDA:  = FTE$DIRT+1
+FTE$CIOB: = FTE$DIRT+1
+FTE$UDA:  = FTE$CIOB+1
 
 #endif

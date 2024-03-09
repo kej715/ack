@@ -9,8 +9,10 @@ local function addheader(h)
 end
 
 addheader("ack/plat.h")
-addheader("sys/types.h")
 addheader("cal/macros.s")
+addheader("sys/files.h")
+addheader("sys/syslog.h")
+addheader("sys/types.h")
 
 acklibrary {
 	name = "headers",
