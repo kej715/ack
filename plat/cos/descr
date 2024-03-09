@@ -48,7 +48,7 @@ name as
 	from .so
 	to .o
 	program cal
-	args -f -s -w -x -l 0 -i {SOURCE} -T {TEXTPATH} -t macros.s -o > <
+	args -f -s -w -x -l 0 -n {SOURCE} -T {TEXTPATH} -t macros.s -o > <
 	prep cond
 end
 name ldr
