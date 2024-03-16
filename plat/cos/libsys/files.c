@@ -32,6 +32,7 @@ FtEntry *_ftAllo(void) {
             entry->dsp.in = entry->dsp.out = entry->dsp.first;
             entry->dsp.limit = entry->dsp.first + COS_CIO_BUF_SIZE;
             entry->dsp.cwf = entry->dsp.lpw = entry->dsp.bio = 0;
+            entry->status = 0;
             entry->in = entry->out = 0;
             entry->position  = 0;
             entry->allocated = 1;

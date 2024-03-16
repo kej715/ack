@@ -9,7 +9,7 @@ DLB      ENDM
 OPLABEL  ILB       A
          IFC       'OPLABEL',NE,'',1
 OPLABEL  =         W.*
-         CON       P.(A)
+         VWD       39/0,24/P.(A),1/0
 ILB      ENDM
 
          MACRO
@@ -84,14 +84,22 @@ TR       ENDM
 OPLABEL  LD        R1,L,R2
          IFC       'OPLABEL',NE,'',1
 OPLABEL  =         *
+RE       IFC       'L',RE,'\i\w*[+-]\d*'
+         R1        W.L{(\i\w*[+-])\d*}(L{\i\w*[+-](\d*)}/8),R2
+RE       ELSE
          R1        W.L,R2
+RE       ENDIF
 LD       ENDM
 
          MACRO
 OPLABEL  ST        L,R1,R2
          IFC       'OPLABEL',NE,'',1
 OPLABEL  =         *
+RE       IFC       'L',RE,'\i\w*[+-]\d*'
+         W.L{(\i\w*[+-])\d*}(L{\i\w*[+-](\d*)}/8),R1 R2
+RE       ELSE
          W.L,R1      R2
+RE       ENDIF
 ST       ENDM
 
          MACRO

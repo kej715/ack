@@ -25,16 +25,20 @@ text:    section   code
          jsm       1f             ; if index not in table
          a2        s1             ; compute address of table entry
          a1        a1+a2
-         a2        3,a1           ; fetch branch target and jump there
-         a0        a2
-         jaz       2f             ; if invalid address
-         b00       a2
+         s2        3,a1           ; fetch branch target and jump there
+         s0        s2
+         jsz       2f             ; if invalid address
+         s2        s2>1           ; convert byte address to parcel address
+         a0        s2
+         b00       a0
          j         b00
 1:
-         a2        ,a1            ; fetch default branch target and jump there
-         a0        a2
-         jaz       2f             ; if invalid address
-         b00       a2
+         s2        ,a1            ; fetch default branch target and jump there
+         s0        s2
+         jsz       2f             ; if invalid address
+         s2        s2>1           ; convert byte address to parcel address
+         a0        s2
+         b00       a0
          j         b00
 2:
          j         @ecase

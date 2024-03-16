@@ -30,16 +30,20 @@ text:    section   code
          a2        a2-1
          j         1b
 2:
-         a2        1,a4           ; fetch branch target and jump there
-         a0        a2
-         jaz       4f             ; if invalid address
-         b00       a2
+         s2        1,a4           ; fetch branch target and jump there
+         s0        s2
+         jsz       4f             ; if invalid address
+         s2        s2>1           ; convert byte address to parcel address
+         a0        s2
+         b00       a0
          j         b00
 3:
-         a2        ,a1            ; fetch default branch target and jump there
-         a0        a2
-         jaz       4f             ; if invalid address
-         b00       a2
+         s2        ,a1            ; fetch default branch target and jump there
+         s0        s2
+         jsz       4f             ; if invalid address
+         s2        s2>1           ; convert byte address to parcel address
+         a0        s2
+         b00       a0
          j         b00
 4:
          j         @ecase

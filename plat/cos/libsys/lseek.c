@@ -21,7 +21,7 @@ static int reposition(FtEntry *entry, off_t position, u8 *buf, int bufSize) {
             n = _ftFlsh(entry);
             if (n < 0) return -1;
         }
-        if (_cosrew(entry) == -1) {
+        if (_reopen(entry->fd) == -1) {
             errno = EIO;
             return -1;
         }

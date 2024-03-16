@@ -74,6 +74,7 @@ acklibrary {
 		"./lseek.c",
 		"./open.c",
 		"./read.c",
+		"./reopen.c",
 		"./signal.c",
 		"./sysio.s",
 		"./syslog.s",

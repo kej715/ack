@@ -12,6 +12,7 @@
 #define COS_MAX_OPEN_FILES 20 /* should match FOPEN_MAX in ack/emufile.h */
 #define COS_UDA_SIZE       128
 #define COS_UDA_SIZE_BYTES (8 * COS_UDA_SIZE)
+#define IS_STDERR(entry) ((entry)->fd == 2 && memcmp((entry)->dsp.fname, "$ERR", 5) == 0)
 
 typedef struct dsp {
     char fname[8];
@@ -79,6 +80,7 @@ DSP     *_ftDsp(int fd);
 int     _ftFlsh(FtEntry *entry);
 void    _ftFree(FtEntry *entry);
 FtEntry *_ftPtr(int fd);
+int     _reopen(int fd);
 void    *_wp2bp(u64 u);
 
 #endif

@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/files.h>
+#include <sys/syslog.h>
+
+#define MAX_LOG_MSG_SIZE 128
 
 int _ftFlsh(FtEntry *entry) {
     int i;
@@ -10,13 +13,22 @@ int _ftFlsh(FtEntry *entry) {
     int unusedBytes;
     int wc;
 
-    wc = (entry->in + 7) >> 3;
-    unusedBytes = (8 - (entry->in & 7)) & 7;
-    for (i = 0; i < unusedBytes; i++) entry->uda[entry->in + i] = 0;
-    if (_coswdr(entry, entry->uda, wc, unusedBytes << 3) != wc) {
-        errno = EIO;
-        return -1;
+    if (IS_STDERR(entry)) {
+        if (entry->in > MAX_LOG_MSG_SIZE) entry->in = MAX_LOG_MSG_SIZE;
+        entry->uda[entry->in] = '\0';
+        syslog((char *)entry->uda, SYSLOG_USER, 1, 1);
     }
+    else {
+        wc = (entry->in + 7) >> 3;
+        unusedBytes = (8 - (entry->in & 7)) & 7;
+        for (i = 0; i < unusedBytes; i++) entry->uda[entry->in + i] = 0;
+        if (_coswdr(entry, entry->uda, wc, unusedBytes << 3) != wc) {
+            entry->in = 0;
+            errno = EIO;
+            return -1;
+        }
+    }
+
     n = entry->in;
     entry->in = 0;
     entry->isDirty = 0;
@@ -55,6 +67,7 @@ ssize_t write(int fd, void *buffer, size_t count) {
             entry->position += n;
             if (entry->in >= COS_UDA_SIZE_BYTES) {
                 if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
+                    entry->in = 0;
                     errno = EIO;
                     return -1;
                 }
@@ -69,14 +82,17 @@ ssize_t write(int fd, void *buffer, size_t count) {
             byte = *bp++;
             if (byte == '\n') {
                 entry->position += 1;
-                n = _ftFlsh(entry);
-                if (n < 0) return -1;
+                if (_ftFlsh(entry) < 0) return -1;
             }
             else {
                 entry->uda[entry->in++] = byte;
                 entry->position += 1;
-                if (entry->in >= COS_UDA_SIZE_BYTES) {
-                    if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
+                if (entry->in >= COS_UDA_SIZE_BYTES && !IS_STDERR(entry)) {
+                    if (IS_STDERR(entry)) {
+                        if (_ftFlsh(entry) < 0) return -1;
+                    }
+                    else if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
+                        entry->in = 0;
                         errno = EIO;
                         return -1;
                     }
