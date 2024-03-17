@@ -21,7 +21,7 @@ int close(int fd)
     }
     if ((entry->access & O_ACCMODE) == O_WRONLY && entry->position > 0 && !IS_STDERR(entry)) {
         rc = _coswed(entry);
-        if (rc == 0) {
+        if (rc == 0 && !IS_STDOUT(entry)) {
             rc = _coscls(&entry->odn);
         }
     }
