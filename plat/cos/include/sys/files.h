@@ -12,7 +12,18 @@
 #define COS_MAX_OPEN_FILES 20 /* should match FOPEN_MAX in ack/emufile.h */
 #define COS_UDA_SIZE       128
 #define COS_UDA_SIZE_BYTES (8 * COS_UDA_SIZE)
+
 #define IS_STDERR(entry) ((entry)->fd == 2 && memcmp((entry)->dsp.fname, "$ERR", 5) == 0)
+#define IS_STDOUT(entry) ((entry)->fd == 1 && memcmp((entry)->dsp.fname, "$OUT", 5) == 0)
+
+typedef struct ddl {
+    char dsname[8];
+    char ldvname[8];
+    u64 w2;
+    u64 w3;
+    u64 w4;
+    u64 w5;
+} DDL;
 
 typedef struct dsp {
     char fname[8];
@@ -65,6 +76,7 @@ typedef struct ftEntry {
 void    _bcopy(void *dst, void *src, int ct);
 u64     _bp2wp(void *ptr);
 int     _coscls(ODN *odn);
+int     _cosdnt(DDL *ddl);
 int     _cosopn(ODN *odn, int pd);
 int     _cosrdp(FtEntry *entry, void *uda, int ct);
 int     _cosrew(FtEntry *entry);
@@ -75,6 +87,7 @@ int     _coswdp(FtEntry *entry, void *uda, int ct);
 int     _coswed(FtEntry *entry);
 int     _coswef(FtEntry *entry);
 int     _coswer(FtEntry *entry);
+int     _exists(const char *dsname);
 FtEntry *_ftAllo(void);
 DSP     *_ftDsp(int fd);
 int     _ftFlsh(FtEntry *entry);

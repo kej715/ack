@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/files.h>
 
-int open(const char* path, int access, ...)
+int open(const char *path, int access, ...)
 {
     FtEntry *entry;
     int len;
@@ -33,7 +33,6 @@ int open(const char* path, int access, ...)
 
     mode = access & O_ACCMODE;
 
-    /* Map stderr onto system log */
     if (entry->fd == 2 && strcmp(path, "$ERR") == 0) {
         if (mode != O_WRONLY || (access & O_BINARY) != 0) {
             errno = EINVAL;
@@ -42,9 +41,16 @@ int open(const char* path, int access, ...)
         return entry->fd;
     }
 
+    if (entry->fd == 1 && strcmp(path, "$OUT") == 0) {
+        if (mode != O_WRONLY || (access & O_BINARY) != 0) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+
     /* Open with saved position and specify user-managed DSP */
     entry->odn.attrs |= (1 << 60) | _bp2wp(&entry->dsp);
-    if ((access & O_TRUNC) != 0 && strcmp(path, "$OUT") != 0) {
+    if ((access & O_TRUNC) != 0 && strcmp(path, "$OUT") != 0 && _exists(path)) {
         _cosrls(&entry->odn);
     }
 
