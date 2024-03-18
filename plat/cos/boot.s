@@ -1,4 +1,5 @@
 MAX%ARGV: = 25               ; max size of argv
+MAX%OPEN: = 20               ; max open files
 
 * Job Communication Block definitions
 * Address of control card image in job communication area
@@ -6,9 +7,12 @@ JCCCI:    = 5                ; address of control card image
 JCCPR:    = O'20             ; address of parsed command line parameters
 JCHLM:    = O'101            ; address of high limit of user code (bits 16-39)
 JCFL:     = O'101            ; address of field length (bits 40-63)
+JCDSP:    = O'102            ; Base address of DSP area (bits 40-63)
+JCLFT:    = O'103            ; Base of LFT (bits 40-63)
 
 * System function numbers
 F$ADV:    = 0                ; advance to next job step
+F$ABT:    = 1                ; abort job
 
           ext      @%ftFini
           ext      @%ftInit
@@ -109,11 +113,14 @@ start8:   ,a2      s6        ; store last part of token
 *
 *  Initialize local base, stack pointer, and heap pointer
 *
-          s1       JCFL,     ; preset stack pointer to end of field length
+          s1       JCLFT,    ; preset stack pointer to base of system-managed LFT's
           s2       <24
           s3       s1&s2
+          s1       MAX%OPEN*2 ; allow for LFT's associated with max open files
+          s3       s3-s1
           a7       s3
           a6       a7        ; preset local base to stack pointer
+          s1       JCHLM,    ; preset stack pointer to current field length
           s1       s1>24     ; preset heap pointer to HLM
           s3       s1&s2
           a5       s3
@@ -138,13 +145,21 @@ start8:   ,a2      s6        ; store last part of token
 *  Call main()
 *
           r        @%m%a%i%n
+          a7       a7+1      ; remove args from stack
+          a7       a7+1
+          ,a7      s7        ; push return value
 *
 *  Exit gracefully
 *
           entry    @%exit
-@%exit:   bss      0
-          r        @%ftFini  ; finalize stdio
+@%exit:   r        @%ftFini  ; finalize stdio
+          s0       ,a7
+          jsn      @%abort
           s0       F$ADV     ; advance to next job step
+          ex
+
+          entry    @%abort
+@%abort:  s0       F$ABT
           ex
 
 data:     section data
