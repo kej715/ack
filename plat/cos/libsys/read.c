@@ -7,6 +7,7 @@
 ssize_t read(int fd, void *buffer, size_t count) {
     u8 *bp;
     u8 cwf;
+    DSP *dsp;
     FtEntry *entry;
     u8 *limit;
     int n;
@@ -33,7 +34,8 @@ ssize_t read(int fd, void *buffer, size_t count) {
 
             n = _cosrdp(entry, entry->uda, COS_UDA_SIZE);
 
-            cwf = entry->dsp.cwf >> 60;
+            dsp = _getdsp(entry);
+            cwf = dsp->cwf >> 60;
             if ((cwf & 1) != 0)
                 entry->status = COS_EOD;
             else if ((cwf & 4) != 0)

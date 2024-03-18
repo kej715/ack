@@ -2,6 +2,7 @@
 #include "ftentry.h"
 
          ext       $WEOD
+         ext       %getdsp
 
 text:    section   code
 
@@ -17,10 +18,7 @@ text:    section   code
          entry     @%coswef
 @%coswef:ENTER
          s1        1,a7           ; get byte address of FtEntry
-         s1        s1>3           ; convert to word address
-         a1        s1             ; calculate address of DSP
-         a2        fte$dsp
-         a1        a1+a2
+         r         %getdsp        ; get DSP address from FtEntry
          r         $WEOF          ; perform the write operation
          s0        s1
          jsn       2f             ; if failure

@@ -7,6 +7,8 @@
 
 int open(const char *path, int access, ...)
 {
+    u8 *cioBuf;
+    DSP *dsp;
     FtEntry *entry;
     int len;
     int mode;
@@ -25,33 +27,53 @@ int open(const char *path, int access, ...)
         return -1;
     }
 
-    memset(entry->dsp.fname, 0, 8);
-    memcpy(entry->dsp.fname, path, len);
-    memcpy(entry->odn.fname, entry->dsp.fname, 8);
-    entry->access = access;
-    entry->status = 0;
+    memset(entry->odn.fname, 0, 8);
+    memcpy(entry->odn.fname, path, len);
+    entry->odn.attrs = 0;
+    entry->access    = access;
+    entry->status    = 0;
 
     mode = access & O_ACCMODE;
 
-    if (entry->fd == 2 && strcmp(path, "$ERR") == 0) {
+    if (IS_STDIN(entry)) {
+        if (mode != O_RDONLY || (access & O_BINARY) != 0) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+    else if (IS_STDOUT(entry)) {
+        if (mode != O_WRONLY || (access & O_BINARY) != 0) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+    else if (IS_STDERR(entry)) {
         if (mode != O_WRONLY || (access & O_BINARY) != 0) {
             errno = EINVAL;
             return -1;
         }
         return entry->fd;
     }
-
-    if (entry->fd == 1 && strcmp(path, "$OUT") == 0) {
-        if (mode != O_WRONLY || (access & O_BINARY) != 0) {
-            errno = EINVAL;
-            return -1;
+    else {
+        if ((access & O_TRUNC) != 0 && _exists(path)) {
+            _cosrls(&entry->odn);
         }
-    }
-
-    /* Open with saved position and specify user-managed DSP */
-    entry->odn.attrs |= (1 << 60) | _bp2wp(&entry->dsp);
-    if ((access & O_TRUNC) != 0 && strcmp(path, "$OUT") != 0 && _exists(path)) {
-        _cosrls(&entry->odn);
+        dsp = _ftDsp(entry);
+        entry->odn.attrs = _bp2wp(dsp);
+        memset(dsp, 0, sizeof(DSP));
+        memcpy(dsp->fname, entry->odn.fname, 8);
+        if (entry->cioBuffer == 0) {
+            cioBuf = (u8 *)malloc(COS_CIO_BUF_SIZE * 8);
+            if (cioBuf == NULL) {
+                errno = EMFILE;
+                _ftFree(entry);
+                return -1;
+            }
+            entry->cioBuffer = _bp2wp(cioBuf);
+        }
+        dsp->first = entry->cioBuffer;
+        dsp->in = dsp->out = dsp->first;
+        dsp->limit = dsp->first + COS_CIO_BUF_SIZE;
     }
 
     if (mode == O_WRONLY)

@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -7,6 +8,7 @@
 int close(int fd)
 {
     FtEntry *entry;
+    int mode;
     int n;
     int rc;
 
@@ -19,10 +21,20 @@ int close(int fd)
         n = _ftFlsh(entry);
         if (n < 0) return -1;
     }
-    if ((entry->access & O_ACCMODE) == O_WRONLY && entry->position > 0 && !IS_STDERR(entry)) {
-        rc = _coswed(entry);
-        if (rc == 0 && !IS_STDOUT(entry)) {
-            rc = _coscls(&entry->odn);
+    rc = 0;
+    if (!IS_STDIN(entry) && !IS_STDOUT(entry) && !IS_STDERR(entry)) {
+        mode = entry->access & O_ACCMODE;
+        if (mode == O_RDWR) {
+            rc = lseek(entry->fd, 0, SEEK_END);
+            if (rc != -1) rc = 0;
+        }
+        if (rc == 0) {
+            if (mode != O_RDONLY) {
+                rc = _coswed(entry);
+            }
+            if (rc == 0) {
+                rc = _coscls(&entry->odn);
+            }
         }
     }
     _ftFree(entry);

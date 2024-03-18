@@ -69,6 +69,7 @@ acklibrary {
 		"./exists.c",
 		"./files.c",
 		"./frmptr.s",
+		"./getdsp.s",
 		"./i24tod.s",
 		"./i24too.s",
 		"./i32tox.s",

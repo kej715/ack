@@ -2,6 +2,7 @@
 #include "ftentry.h"
 
          ext       $RWDP
+         ext       %getdsp
 
 text:    section   code
 
@@ -26,10 +27,7 @@ text:    section   code
          entry     @%cosrdp
 @%cosrdp:ENTER
          s1        1,a7           ; get byte address of FtEntry
-         s1        s1>3           ; convert to word address
-         a1        s1             ; calculate address of DSP
-         a2        fte$dsp
-         a1        a1+a2
+         r         %getdsp        ; get DSP address from FtEntry
          s2        2,a7           ; get byte address of user data area
          s2        s2>3           ; convert to word address
          a2        s2

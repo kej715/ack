@@ -1,11 +1,13 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/files.h>
 
 int _reopen(int fd)
 {
+    DSP *dsp;
     FtEntry *entry;
     int mode;
     int n;
@@ -13,7 +15,11 @@ int _reopen(int fd)
     int rc;
 
     entry = _ftPtr(fd);
-    if (entry == NULL || entry->allocated == 0) {
+    if (entry == NULL
+        || entry->allocated == 0
+        || IS_STDIN(entry)
+        || IS_STDOUT(entry)
+        || IS_STDERR(entry)) {
         errno = EBADF;
         return -1;
     }
@@ -23,7 +29,10 @@ int _reopen(int fd)
     }
     if ((entry->access & O_ACCMODE) == O_WRONLY && entry->position > 0) {
         rc = _coswed(entry);
-        if (rc != 0) return -1;
+        if (rc != 0) {
+            errno = EIO;
+            return -1;
+        }
     }
     rc = _coscls(&entry->odn);
     if (rc != 0) {
@@ -39,19 +48,23 @@ int _reopen(int fd)
     else
         pd = 3;
 
+    entry->odn.attrs = 0;
+    entry->status    = 0;
+    entry->position  = 0;
+    entry->in = entry->out = 0;
+    dsp = _ftDsp(entry);
+    memset(dsp, 0, sizeof(DSP));
+    memcpy(dsp->fname, entry->odn.fname, 8);
+    entry->odn.attrs = _bp2wp(dsp);
+    dsp->first = entry->cioBuffer;
+    dsp->in = dsp->out = dsp->first;
+    dsp->limit = dsp->first + COS_CIO_BUF_SIZE;
+
     rc = _cosopn(&entry->odn, pd);
     if (rc != 0) {
         errno = EIO;
         return -1;
     }
-
-    entry->dsp.first = entry->cioBufAddr;
-    entry->dsp.in = entry->dsp.out = entry->dsp.first;
-    entry->dsp.limit = entry->dsp.first + COS_CIO_BUF_SIZE;
-    entry->dsp.cwf = entry->dsp.lpw = entry->dsp.bio = 0;
-    entry->status = 0;
-    entry->in = entry->out = 0;
-    entry->position  = 0;
 
     return 0;
 }

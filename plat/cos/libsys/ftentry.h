@@ -9,7 +9,6 @@
 *  FtEntry is defined in sys/files.h as follows:
 *
 *  typedef struct ftEntry {
-*      DSP dsp;                     /* COS DataSet Parameter table        */
 *      ODN odn;                     /* COS Open Dataset Name table        */
 *      int fd;                      /* file descriptor number             */
 *      int status;                  /* status after I/O operation         */
@@ -20,13 +19,12 @@
 *      int in;                      /* index of next byte to store in uda */
 *      int out;                     /* index of next byte to get from uda */
 *      int isDirty;                 /* 1 if uda has unflushed bytes       */
-*      u64 cioBufAddr;              /* word address of CIO buffer         */
 *      u8  *uda;                    /* user data area                     */
+*      u64 cioBuffer;               /* word address of CIO buffer         */
 *  } FtEntry;
 *
 
-FTE$DSP:  = 0
-FTE$ODN:  = FTE$DSP+24
+FTE$ODN:  = 0
 FTE$FD:   = FTE$ODN+2
 FTE$STAT: = FTE$FD+1
 FTE$BITS: = FTE$STAT+1
@@ -36,7 +34,7 @@ FTE$POS:  = FTE$ACC+1
 FTE$IN:   = FTE$POS+1
 FTE$OUT:  = FTE$IN+1
 FTE$DIRT: = FTE$OUT+1
-FTE$CIOB: = FTE$DIRT+1
-FTE$UDA:  = FTE$CIOB+1
+FTE$UDA:  = FTE$DIRT+1
+FTE$CIOB: = FTE$UDA+1
 
 #endif

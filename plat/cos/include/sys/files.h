@@ -7,14 +7,14 @@
 #define COS_EOF 2
 #define COS_EOD 3
 
-#define COS_SECTOR_SIZE    512
-#define COS_CIO_BUF_SIZE   (COS_SECTOR_SIZE * 2)
+#define COS_CIO_BUF_SIZE   512
 #define COS_MAX_OPEN_FILES 20 /* should match FOPEN_MAX in ack/emufile.h */
 #define COS_UDA_SIZE       128
 #define COS_UDA_SIZE_BYTES (8 * COS_UDA_SIZE)
 
-#define IS_STDERR(entry) ((entry)->fd == 2 && memcmp((entry)->dsp.fname, "$ERR", 5) == 0)
-#define IS_STDOUT(entry) ((entry)->fd == 1 && memcmp((entry)->dsp.fname, "$OUT", 5) == 0)
+#define IS_STDIN(entry)  ((entry)->fd == 0 && memcmp((entry)->odn.fname, "$IN",  4) == 0)
+#define IS_STDOUT(entry) ((entry)->fd == 1 && memcmp((entry)->odn.fname, "$OUT", 5) == 0)
+#define IS_STDERR(entry) ((entry)->fd == 2 && memcmp((entry)->odn.fname, "$ERR", 5) == 0)
 
 typedef struct ddl {
     char dsname[8];
@@ -58,7 +58,6 @@ typedef struct odn {
 } ODN;
 
 typedef struct ftEntry {
-    DSP dsp;                     /* COS DataSet Parameter table        */
     ODN odn;                     /* COS Open Dataset Name table        */
     int fd;                      /* file descriptor number             */
     int status;                  /* status after I/O operation         */
@@ -69,8 +68,8 @@ typedef struct ftEntry {
     int in;                      /* index of next byte to store in uda */
     int out;                     /* index of next byte to get from uda */
     int isDirty;                 /* 1 if uda has unflushed bytes       */
-    u64 cioBufAddr;              /* word address of CIO buffer         */
     u8  *uda;                    /* user data area                     */
+    u64 cioBuffer;               /* word address of CIO buffer         */
 } FtEntry;
 
 void    _bcopy(void *dst, void *src, int ct);
@@ -89,10 +88,11 @@ int     _coswef(FtEntry *entry);
 int     _coswer(FtEntry *entry);
 int     _exists(const char *dsname);
 FtEntry *_ftAllo(void);
-DSP     *_ftDsp(int fd);
+DSP     *_ftDsp(FtEntry *entry);
 int     _ftFlsh(FtEntry *entry);
 void    _ftFree(FtEntry *entry);
 FtEntry *_ftPtr(int fd);
+DSP     *_getdsp(FtEntry *entry);
 int     _reopen(int fd);
 void    *_wp2bp(u64 u);
 

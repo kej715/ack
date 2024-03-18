@@ -12,7 +12,7 @@ text:    section   code
 *    S7 : 0 if success
 *
          entry     @%cosrls
-@%cosrls: bss      0
+@%cosrls:bss       0
          s0        F$RLS
          s1        ,a7            ; get byte address of ODN
          s1        s1>3           ; convert to word address

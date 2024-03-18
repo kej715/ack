@@ -7,6 +7,7 @@
 extern void syslog(char *msg, int dest, int class, int override);
 
 static FtEntry fileTable[COS_MAX_OPEN_FILES];
+static DSP dspTable[COS_MAX_OPEN_FILES];
 
 static int isInit = 0;
 
@@ -25,13 +26,7 @@ FtEntry *_ftAllo(void) {
             if (entry->uda == NULL) {
                 entry->uda = (u8 *)malloc(COS_UDA_SIZE_BYTES);
                 if (entry->uda == NULL) return NULL;
-                entry->cioBufAddr = _bp2wp(malloc(sizeof(u64) * COS_CIO_BUF_SIZE));
-                if (entry->cioBufAddr == 0) return NULL;
             }
-            entry->dsp.first = entry->cioBufAddr;
-            entry->dsp.in = entry->dsp.out = entry->dsp.first;
-            entry->dsp.limit = entry->dsp.first + COS_CIO_BUF_SIZE;
-            entry->dsp.cwf = entry->dsp.lpw = entry->dsp.bio = 0;
             entry->status = 0;
             entry->in = entry->out = 0;
             entry->position  = 0;
@@ -42,12 +37,8 @@ FtEntry *_ftAllo(void) {
     return NULL;
 }
 
-DSP *_ftDsp(int fd) {
-    FtEntry *entry;
-
-    entry = _ftPtr(fd);
-
-    return (entry != NULL) ? &entry->dsp : NULL;
+DSP *_ftDsp(FtEntry *entry) {
+    return dspTable + entry->fd;
 }
 
 void _ftFini(void) {
