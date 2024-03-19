@@ -154,12 +154,11 @@ start8:   ,a2      s6        ; store last part of token
           entry    @%exit
 @%exit:   r        @%ftFini  ; finalize stdio
           s0       ,a7
-          jsn      @%abort
+          jsn      @%exit1
           s0       F$ADV     ; advance to next job step
           ex
 
-          entry    @%abort
-@%abort:  s0       F$ABT
+@%exit1:  s0       F$ABT
           ex
 
 data:     section data
