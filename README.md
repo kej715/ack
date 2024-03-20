@@ -1,4 +1,4 @@
-#ACK for Cray X-MP and COS
+# ACK for Cray X-MP and COS
 
 This fork of the Amsterdam Compiler Kit supports the Cray X-MP supercomputer and the COS operating
 system platform. All other machines and platforms are disabled in this fork by commenting out
