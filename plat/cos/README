@@ -7,7 +7,8 @@ supercomputer simulator running the COS operating system.
 COS has special needs, one being that it doesn't support byte-accessible files.
 The port's read/write/open/close/lseek etc should handle this transparently.
 
-File descriptors 0, 1 and 2 represent COS $IN, $OUT, and $ERR files.
+File descriptors 0 and 1 are mapped to COS $IN and $OUT files, and file
+descriptor 2 is mapped to the COS user log.
 
 Example command line
 ====================
