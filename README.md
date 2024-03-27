@@ -5,23 +5,46 @@ system platform. All other machines and platforms are disabled in this fork by c
 references to them in the LUA build scripts. Currently, this fork builds and runs successfully on
 MacOS and Linux.
 
-A prerequisite for all platforms is that the tools from the following GitHub repository are
-installed on your build platform. This repository provides a cross-assembler, cross-linker, and cross-library manager for the Cray X-MP. These are used by this fork of ACK to produce executables for the Cray X-MP and COS operating system.
+ACK requires the following tools to be installed on MacOS and Linux before it will build
+successfully:
+
+- bison
+- flex
+- gcc
+- gmake
+- lua
+
+For example, on Debian Linux (and derivatives), the tools may be installed using __apt__, as
+in:
+
+```
+sudo apt install bison flex gcc lua5.3 make
+```
+
+On MacOS, if you have installed _Xcode_, you will have _bison_ and _flex_ already. A package
+manager such as _Homebrew_ may be used to install _lua_. You will also need GNU _gcc_ and
+_gmake_. ACK will not build successfully using the version of _gcc_ provided by _Xcode_ and _LLVM_. Using _Homebrew_, _lua_, _gcc_, and _gmake_ make be installed as in:
+
+```
+brew install gcc lua make
+```
+
+Another prerequisite for all platforms is that the tools from the following GitHub repository
+are installed on your build platform. This repository provides a cross-assembler, cross-linker, and cross-library manager for the Cray X-MP. These are used by this fork of ACK to produce executables for the Cray X-MP and COS operating system.
 
 [https://github.com/kej715/COS-Tools](https://github.com/kej715/COS-Tools)
 
-A prereguisite on MacOS is that GNU _gcc_ and _gmake_ must be installed. ACK will not build
-successfully using the version of _gcc_ provided by Xcode and LLVM. To build ACK for Cray X-MP and
-COS, use the script provided in the top-level directory, as in:
+After installing all of the prerequisite tools, the ACK for Cray X-MP and COS may be built
+using the script provided in the top-level directory of the repo, as in:
 
 ```
-./cray-build
+./cray-build.sh
 ```
 
 To install ACK after building:
 
 ```
-sudo ./cray-build install
+sudo ./cray-build.sh install
 ```
 
 After successfully building and installing ACK, the following cross-compilers will be
