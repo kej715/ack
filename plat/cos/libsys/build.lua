@@ -49,6 +49,7 @@ end
 acklibrary {
     name = "lib",
     srcs = {
+		"./args.s",
 		"./bp2wp.s",
 		"./brk.s",
 		"./close.c",
@@ -76,6 +77,7 @@ acklibrary {
 		"./isatty.c",
 		"./lseek.c",
 		"./open.c",
+		"./pack.s",
 		"./read.c",
 		"./reopen.c",
 		"./signal.c",
@@ -84,6 +86,7 @@ acklibrary {
 		"./time.c",
 		"./trap.s",
 		"./unlink.c",
+		"./unpack.s",
 		"./wp2bp.s",
 		"./write.c",
 		generated
