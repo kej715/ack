@@ -1807,14 +1807,26 @@ pat lni
     st  {LABEL,"hol0"},a0,%a
 
 pat lor $1==0
-  yields lb
+  uses ASREG
+  gen
+    move lb,%a
+    lshc %a,{CONST,3}
+  yields %a
 
 pat lor $1==1
   with STACK
-  yields sp
+  uses ASREG
+  gen
+    move sp,%a
+    lshc %a,{CONST,3}
+  yields %a
 
 pat lor $1==2
-  yields hp
+  uses ASREG
+  gen
+    move hp,%a
+    lshc %a,{CONST,3}
+  yields %a
 
 pat mon
   with FNARG
@@ -1850,22 +1862,26 @@ pat sim
     st {LABEL,"@ignmask"},a0,%1
 
 pat str $1==0
-  uses AAREG
+  uses ASREG
   gen
     pop  %a
+    rshc %a,{CONST,3}
     move %a,lb
 
 pat str $1==1
-  uses AAREG
+  uses ASREG
   gen
     pop  %a
+    rshc %a,{CONST,3}
     move %a,sp
 
 pat str $1==2
-  uses AAREG
+  uses ASREG,AAREG
   gen
     pop  %a
-    isub a0,%a,hp
+    rshc %a,{CONST,3}
+    move %a,%b
+    isub a0,%b,hp
     jap  {LABEL,"@eheap"}
     move %a,hp
 
