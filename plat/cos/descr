@@ -69,7 +69,6 @@ name ldr
 		(.ocm:{TAIL}={PLATFORMDIR}/liboccam.a) \
 		(.ocm.bas.mod.b.c.p:{TAIL}={PLATFORMDIR}/libc.a) \
 		(.e:{TAIL}={PLATFORMDIR}/libem.a) \
-		           {PLATFORMDIR}/libsys.a \
 			   {PLATFORMDIR}/libc.a \
 			   {PLATFORMDIR}/libem.a \
 		           {PLATFORMDIR}/libsys.a
