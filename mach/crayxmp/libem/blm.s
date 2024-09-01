@@ -32,8 +32,14 @@ text:    section   code
 *    S2 : source byte address
 *
 %blm:    bss       0
+         s3        <3
+         s0        s1&s3
+         jsn       1f             ; if destination not word-aligned
+         s0        s2&s3
+         jsz       3f             ; if both source and destination are word-aligned
+1:
          a0        a1
-         jaz       1f             ; if done
+         jaz       2f             ; if done
          s3        s2             ; calculate word address of next source byte
          s3        s3>3
          a2        s3
@@ -68,7 +74,48 @@ text:    section   code
          s2        s2+s3
          a1        a1-1           ; decrement the byte count
          j         %blm
-1:
+2:
          j         b00
+*
+*        Move whole words until fewer than 8 bytes remain
+*
+3:
+         s1        s1>3           ; calculate word address of first destination byte
+         a2        s1
+         s2        s2>3           ; calculate word address of first source byte
+         a3        s2
+         a4        8              ; bytes per word
+4:
+         a0        a1
+         jaz       2b             ; if done
+         a0        a1-a4
+         jam       5f             ; if fewer than 8 bytes remaining
+         
+         s3        ,a3            ; move next word
+         ,a2       s3
+         a3        a3+1           ; advance source address
+         a2        a2+1           ; advance destination address
+         a1        a1-a4          ; decrement byte count
+         j         4b
+5:
+         s3        ,a3            ; fetch last source word
+         s2        ,a2            ; fetch last destination word
+         s4        bmasks,a1      ; fetch mask for remaining bytes
+         s3        s4&s3          ; isolate remaining source bytes
+         s2        #s4&s2         ; clear bytes to be replaced in destination word
+         s2        s3!s2          ; merge source and destination bytes
+         ,a2       s2             ; store final word
+         j         b00
+
+rom:     section   data
+bmasks:  bss       0
+         con       0
+         con       X'ff00000000000000
+         con       X'ffff000000000000
+         con       X'ffffff0000000000
+         con       X'ffffffff00000000
+         con       X'ffffffffff000000
+         con       X'ffffffffffff0000
+         con       X'ffffffffffffff00
 
          end

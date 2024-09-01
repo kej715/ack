@@ -107,9 +107,8 @@ text:    section   code
          s2        ,a7            ; pop bytes
          a7        a7+1
          s3        <3             ; extract byte index of first byte
-         s3        s3&s1
+         s0        s3&s1
          s1        s1>3           ; word address of first byte
-         s0        s3
          jsn       1f             ; if first byte is not word-aligned
          a1        s1
          ,a1       s2
