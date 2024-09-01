@@ -3,10 +3,9 @@
  */
 /* $Id$ */
 
-#include <stdlib.h>
-
 #if ACKCONF_WANT_TERMIOS
 
+#include <stdlib.h>
 #include <termios.h>
 int isatty(int fd)
 {
