@@ -43,7 +43,7 @@ installable {
 	map = {
 		"lang/basic/src+pkg",
 		"lang/cem/cemcom.ansi+pkg",
---		"lang/m2/comp+pkg",
+		"lang/m2/comp+pkg",
 		"lang/pc/comp+pkg",
 --		"lang/b/compiler+pkg",
 		"util/ack+pkg",
