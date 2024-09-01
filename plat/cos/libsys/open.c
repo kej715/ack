@@ -86,7 +86,7 @@ int open(const char *path, int access, ...)
     rc = _cosopn(&entry->odn, pd);
     if (rc != 0) {
         _ftFree(entry);
-        errno = EMFILE;
+        errno = ((access & O_CREAT) == 0) ? ENOENT : EMFILE;
         return -1;
     }
 
