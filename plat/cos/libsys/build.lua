@@ -78,6 +78,7 @@ acklibrary {
 		"./lseek.c",
 		"./open.c",
 		"./pack.s",
+		"./pargs.c",
 		"./read.c",
 		"./reopen.c",
 		"./signal.c",
