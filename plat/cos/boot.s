@@ -1,6 +1,8 @@
+MAX%ARGS: = 100              ; maximum number of command line arguments
 MAX%OPEN: = 20               ; max open files
 
 * Job Communication Block definitions
+JCCCI:    = O'005            ; address of control card image
 JCHLM:    = O'101            ; address of high limit of user code (bits 16-39)
 JCFL:     = O'101            ; address of field length (bits 40-63)
 JCDSP:    = O'102            ; Base address of DSP area (bits 40-63)
@@ -13,6 +15,7 @@ F$ABT:    = 1                ; abort job
           ext      @%ftFini
           ext      @%ftInit
           ext      @%m%a%i%n
+          ext      @%pargs
 
 text:   section code
 %%start:  =        *
@@ -34,17 +37,20 @@ text:   section code
 *
 *  Parse command line arguments
 *
-          r        $pargs
-          argv,    a1
-          argc,    a2
-1:
-          s1       ,a1       ; translate all command line token addresses to byte addresses
+          a7       a7-1
+          s1       argv
           s1       s1<3
-          ,a1      s1
-          a1       a1+1
-          a2       a2-1
-          a0       a2
-          jan      1b        ; if more addresses to process
+          ,a7      s1
+          a7       a7-1
+          s1       argc
+          s1       s1<3
+          ,a7      s1
+          a7       a7-1
+          s1       JCCCI*8
+          ,a7      s1
+          r        @%pargs
+          a1       3
+          a7       a7+a1
 *
 *  Open stdin, stdout, stderr
 *
@@ -56,7 +62,7 @@ text:   section code
           s1       s1<3
           a7       a7-1
           ,a7      s1
-          s1       argv,     ; push argv after converting to byte pointer
+          s1       argv      ; push argv after converting to byte pointer
           s1       s1<3
           a7       a7-1
           ,a7      s1
@@ -114,7 +120,7 @@ hol0:     =        w.*
 
 bss:      section  data
 argc:     bss      1
-argv:     bss      1
+argv:     bssz     MAX%ARGS+1
 envp:     bssz     1
 
           end
