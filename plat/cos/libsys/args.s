@@ -28,7 +28,7 @@ $pargs:  ENTER
          A3        (JCCPR-JCCCI)*8
          R         $unpack
          A1        charv
-         R         toupper        ; convert lower case to upper case
+         R         nrmliz         ; normalize the unpacked image
          A1        charv
 1:
          A2        A1             ; start of next token
@@ -157,41 +157,51 @@ p10:
          RETURN
 
 **
-*  toupper - convert lower case to upper case
+*  nrmliz - normalize a character list
+*
+*  Normalization involves converting lower case to upper case and removing whitespace.
 *
 *  Entry:
 *    (A1) : address of unpacked character list
 *
 
-toupper: S1        ,A1            ; fetch next character
+nrmliz:  A2        A1             ; preset destination address
+1:
+         S1        ,A1            ; fetch next character
+         A1        A1+1
          S0        S1
-         JSZ       2f             ; if done
+         JSZ       3f             ; if done
+         S2        ' 'R
+         S0        S1\S2
+         JSZ       1b             ; if whitespace
          S2        X'27
          S0        S1\S2
-         JSZ       3f             ; if start of string
+         JSZ       4f             ; if start of string
          S2        'a'R
          S0        S1-S2
-         JSM       1f             ; if not lower case
+         JSM       2f             ; if not lower case
          S2        'z'R+1
          S0        S1-S2
-         JSP       1f             ; if not lower case
+         JSP       2f             ; if not lower case
          S2        'a'R-'A'R
          S1        S1-S2
-         ,A1       S1
-1:
-         A1        A1+1
-         J         toupper
 2:
-         J         B00
+         ,A2       S1
+         A2        A2+1
+         J         1b
 3:
-         A1        A1+1
+         ,A2       S1             ; store 0-byte terminator
+         J         B00
+4:
+         ,A2       S1
+         A2        A2+1
          S1        ,A1
-         S0        S1
-         JSZ       2b             ; if end of character list
-         S0        S1\S2
-         JSN       3b             ; if not end of string
          A1        A1+1
-         J         toupper
+         S0        S1
+         JSZ       3b             ; if end of character list
+         S0        S1\S2
+         JSN       4b             ; if not end of string
+         J         2b
 
 data:    SECTION   data
 
