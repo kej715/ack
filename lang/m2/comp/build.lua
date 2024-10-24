@@ -66,7 +66,7 @@ cprogram {
 	name = "em_m2",
 	srcs = {
 		"+chartab_c",
-		"+next_c",
+		--"+next_c",
 		"+symbol2str_c",
 		"./LLlex.c",
 		"./LLmessage.c",
