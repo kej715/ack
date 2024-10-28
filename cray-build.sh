@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  This script builds ACK for the Cray X-MP computer running
 #  the COS operating system. The COS Tools from the folling
