@@ -6,6 +6,9 @@
 __IsNan(double d)
 {
 #if defined(__vax) || defined(__pdp)
+#elif defined(__crayxmp)
+	if (((*((long*)&d) >> 48) & 0x7fff) >= 060000)
+		return 1;
 #else
 	float f = d;
 
