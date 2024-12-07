@@ -40,6 +40,9 @@ static void oldinstr(instr_p);
 static bool op_separator(instr_p);
 static bool well_shaped(const char *);
 static bool is_letter(char);
+static int is_word_offset(char *s);
+static int is_loi8(char *s);
+static int is_sti8(char *s);
 
 static struct variable var[NRVARS+1];
 static struct variable ANY;  /* ANY symbol matching any instruction */
