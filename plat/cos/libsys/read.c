@@ -23,7 +23,7 @@ ssize_t read(int fd, void *buffer, size_t count) {
 
     while (bp < limit) {
         if (entry->out >= entry->in) {
-            if (entry->status == COS_EOR && (entry->access & O_TEXT) != 0) {
+            if (entry->status == COS_EOR && (entry->access & O_BINARY) == 0) {
                 *bp++ = '\n';
                 entry->status = 0;
             }
