@@ -68,6 +68,7 @@ typedef struct ftEntry {
     int in;                      /* index of next byte to store in uda */
     int out;                     /* index of next byte to get from uda */
     int isDirty;                 /* 1 if uda has unflushed bytes       */
+    int blankCount;              /* COS blank compression indicator    */
     u8  *uda;                    /* user data area                     */
     u64 cioBuffer;               /* word address of CIO buffer         */
 } FtEntry;
