@@ -8,7 +8,6 @@
 int close(int fd)
 {
     FtEntry *entry;
-    int mode;
     int n;
     int rc;
 
@@ -17,24 +16,20 @@ int close(int fd)
         errno = EBADF;
         return -1;
     }
-    if (entry->isDirty) {
+    if ((entry->flags & IsDirty) != 0) {
         n = _ftFlsh(entry);
         if (n < 0) return -1;
     }
     rc = 0;
     if (!IS_STDIN(entry) && !IS_STDOUT(entry) && !IS_STDERR(entry)) {
-        mode = entry->access & O_ACCMODE;
-        if (mode == O_RDWR) {
+        if ((entry->flags & IsWritten) != 0) {
             rc = lseek(entry->fd, 0, SEEK_END);
-            if (rc != -1) rc = 0;
-        }
-        if (rc == 0) {
-            if (mode != O_RDONLY) {
+            if (rc != -1) {
                 rc = _coswed(entry);
             }
-            if (rc == 0) {
-                rc = _coscls(&entry->odn);
-            }
+        }
+        if (rc == 0) {
+            rc = _coscls(&entry->odn);
         }
     }
     _ftFree(entry);

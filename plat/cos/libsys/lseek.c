@@ -17,7 +17,7 @@ static int reposition(FtEntry *entry, off_t position, u8 *buf, int bufSize) {
             errno = EINVAL;
             return -1;
         }
-        if (entry->isDirty) {
+        if ((entry->flags & IsDirty) != 0) {
             n = _ftFlsh(entry);
             if (n < 0) return -1;
         }
@@ -77,22 +77,24 @@ off_t lseek(int fd, off_t offset, int whence) {
     case SEEK_END:
         mode = entry->access & O_ACCMODE;
         if (mode == O_RDONLY || mode == O_RDWR) {
-            if (entry->isDirty) {
+            if ((entry->flags & IsDirty) != 0) {
                 n = _ftFlsh(entry);
                 if (n < 0) return -1;
             }
             /*
              *  Position to end of file
              */
-            for (;;) {
-                n = read(entry->fd, buf, sizeof(buf));
-                if (n == -1) {
-                    errno = EIO;
-                    return -1;
-                }
-                else if (n == 0) {
-                    if (entry->status == COS_EOD) break;
-                    entry->status = 0;
+            if (entry->position < entry->maxPosition) {
+                for (;;) {
+                    n = read(entry->fd, buf, sizeof(buf));
+                    if (n == -1) {
+                        errno = EIO;
+                        return -1;
+                    }
+                    else if (n == 0) {
+                        if (entry->status == COS_EOD) break;
+                        entry->status = 0;
+                    }
                 }
             }
         }
@@ -113,6 +115,8 @@ off_t lseek(int fd, off_t offset, int whence) {
         errno = EINVAL;
         return -1;
     }
+
+    if (entry->position > entry->maxPosition) entry->maxPosition = entry->position;
     
     return entry->position;
 }

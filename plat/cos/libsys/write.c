@@ -31,7 +31,8 @@ int _ftFlsh(FtEntry *entry) {
 
     n = entry->in;
     entry->in = 0;
-    entry->isDirty = 0;
+    entry->flags &= ~IsDirty;
+    entry->flags |=  IsWritten;
 
     return n;
 }
@@ -65,6 +66,7 @@ ssize_t write(int fd, void *buffer, size_t count) {
             si += n;
             entry->in += n;
             entry->position += n;
+            if (entry->position > entry->maxPosition) entry->maxPosition = entry->position;
             if (entry->in >= COS_UDA_SIZE_BYTES) {
                 if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
                     entry->in = 0;
@@ -82,16 +84,15 @@ ssize_t write(int fd, void *buffer, size_t count) {
             byte = *bp++;
             if (byte == '\n') {
                 entry->position += 1;
+                if (entry->position > entry->maxPosition) entry->maxPosition = entry->position;
                 if (_ftFlsh(entry) < 0) return -1;
             }
             else {
                 entry->uda[entry->in++] = byte;
                 entry->position += 1;
+                if (entry->position > entry->maxPosition) entry->maxPosition = entry->position;
                 if (entry->in >= COS_UDA_SIZE_BYTES && !IS_STDERR(entry)) {
-                    if (IS_STDERR(entry)) {
-                        if (_ftFlsh(entry) < 0) return -1;
-                    }
-                    else if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
+                    if (_coswdp(entry, entry->uda, COS_UDA_SIZE) != COS_UDA_SIZE) {
                         entry->in = 0;
                         errno = EIO;
                         return -1;
@@ -102,7 +103,8 @@ ssize_t write(int fd, void *buffer, size_t count) {
         }
     }
 
-    entry->isDirty = entry->in > 0;
+    if (entry->in > 0) entry->flags |= IsDirty;
+    if (count     > 0) entry->flags |= IsWritten;
 
     return count;
 }

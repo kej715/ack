@@ -23,7 +23,7 @@ int _reopen(int fd)
         errno = EBADF;
         return -1;
     }
-    if (entry->isDirty) {
+    if ((entry->flags & IsDirty) != 0) {
         n = _ftFlsh(entry);
         if (n < 0) return -1;
     }
@@ -48,10 +48,13 @@ int _reopen(int fd)
     else
         pd = 3;
 
-    entry->odn.attrs = 0;
-    entry->status    = 0;
-    entry->position  = 0;
-    entry->in = entry->out = 0;
+    entry->odn.attrs   = 0;
+    entry->status      = 0;
+    entry->position    = 0;
+    entry->maxPosition = 0;
+    entry->flags       = 0;
+    entry->in          = 0;
+    entry->out         = 0;
     dsp = _ftDsp(entry);
     memset(dsp, 0, sizeof(DSP));
     memcpy(dsp->fname, entry->odn.fname, 8);

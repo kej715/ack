@@ -16,9 +16,10 @@
 *      int allocated;               /* 1 if entry allocated for use       */
 *      int access;                  /* file access mode                   */
 *      u64 position;                /* current file position              */
+*      u64 maxPosition;             /* maximum file position reached      */
 *      int in;                      /* index of next byte to store in uda */
 *      int out;                     /* index of next byte to get from uda */
-*      int isDirty;                 /* 1 if uda has unflushed bytes       */
+*      int flags;                   /* IsDirty and IsWritten flags        */
 *      int blankCount;              /* COS blank compression indicator    */
 *      u8  *uda;                    /* user data area                     */
 *      u64 cioBuffer;               /* word address of CIO buffer         */
@@ -32,10 +33,11 @@ FTE$BITS: = FTE$STAT+1
 FTE$ALLO: = FTE$BITS+1
 FTE$ACC:  = FTE$ALLO+1
 FTE$POS:  = FTE$ACC+1
-FTE$IN:   = FTE$POS+1
+FTE$MAXP: = FTE$POS+1
+FTE$IN:   = FTE$MAXP+1
 FTE$OUT:  = FTE$IN+1
-FTE$DIRT: = FTE$OUT+1
-FTE$BLNK: = FTE$DIRT+1
+FTE$FLGS: = FTE$OUT+1
+FTE$BLNK: = FTE$FLGS+1
 FTE$UDA:  = FTE$BLNK+1
 FTE$CIOB: = FTE$UDA+1
 

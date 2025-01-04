@@ -57,6 +57,9 @@ typedef struct odn {
     u64  attrs;
 } ODN;
 
+#define IsDirty   1   /* flag indicating uda has unflushed bytes         */
+#define IsWritten 2   /* flag indicating bytes have been written to file */
+
 typedef struct ftEntry {
     ODN odn;                     /* COS Open Dataset Name table        */
     int fd;                      /* file descriptor number             */
@@ -65,9 +68,10 @@ typedef struct ftEntry {
     int allocated;               /* 1 if entry allocated for use       */
     int access;                  /* file access mode                   */
     u64 position;                /* current file position              */
+    u64 maxPosition;             /* maximum file position reached      */
     int in;                      /* index of next byte to store in uda */
     int out;                     /* index of next byte to get from uda */
-    int isDirty;                 /* 1 if uda has unflushed bytes       */
+    int flags;                   /* IsDirty and IsWritten flags        */
     int blankCount;              /* COS blank compression indicator    */
     u8  *uda;                    /* user data area                     */
     u64 cioBuffer;               /* word address of CIO buffer         */

@@ -122,6 +122,7 @@ ssize_t read(int fd, void *buffer, size_t count) {
 
     n = bp - (u8 *)buffer;
     entry->position += n;
+    if (entry->position > entry->maxPosition) entry->maxPosition =  entry->position;
 
     return n;
 }

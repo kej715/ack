@@ -27,10 +27,13 @@ FtEntry *_ftAllo(void) {
                 entry->uda = (u8 *)malloc(COS_UDA_SIZE_BYTES);
                 if (entry->uda == NULL) return NULL;
             }
-            entry->status = 0;
-            entry->in = entry->out = 0;
-            entry->position  = 0;
-            entry->allocated = 1;
+            entry->status      = 0;
+            entry->in          = 0;
+            entry->out         = 0;
+            entry->position    = 0;
+            entry->maxPosition = 0;
+            entry->flags       = 0;
+            entry->allocated   = 1;
             return entry;
         }
     }
