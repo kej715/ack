@@ -40,6 +40,8 @@ text:    section   code
          s2        1,a7           ; retrieve original divisor
          s0        s1
          jsm       3f             ; if original divisor is negative
+         s0        s7
+         jsm       1f             ; if remainder less than zero
          s0        s7-s2
          jsm       2f             ; if remainder less than original divisor
 1:
