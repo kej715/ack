@@ -25,17 +25,23 @@ text:    section   code
          s3        s1
          s3        s3>48
          s3        s3&s2          ; isolate exponent
-         s4        45             ; round value by adding 3 "noise" bits
-         s3        s3-s4
-         s3        s3&s2
-         s4        7
-         s3        s3<48
-         s4        s4<45
-         s3        s3!s4
-         s1        s1+Fs3
-         s3        s1             ; isolate new exponent
-         s3        s3>48
-         s3        s3&s2
+*
+*  The commented-out code, below, was intended to compensate for
+*  small errors that can be introduced into floating point operations.
+*  It tended to produce incorrect results for small, negative integer
+*  values, though, so it has been disabled.
+*  
+*        s4        45             ; round value by adding 3 "noise" bits
+*        s3        s3-s4
+*        s3        s3&s2
+*        s4        7
+*        s3        s3<48
+*        s4        s4<45
+*        s3        s3!s4
+*        s1        s1+Fs3
+*        s3        s1             ; isolate new exponent
+*        s3        s3>48
+*        s3        s3&s2
          s2        o'40060        ; calculate shift count for mantissa
          s2        s2-s3
          s0        s2
