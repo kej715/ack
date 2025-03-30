@@ -60,6 +60,7 @@ static char *dtostr(double value, int ndigit, int *decpt, int *sign, int ecvtfla
 	int i;
 	int len;
 	char *limit;
+        double rounded;
 
 	initTables();
 	*decpt = 0;
@@ -129,7 +130,9 @@ static char *dtostr(double value, int ndigit, int *decpt, int *sign, int ecvtfla
 	cvt.d = value;
 	exp = (cvt.u >> 48) & 0x7fff;
 	cvt.u = (((exp - 45) & 0x7fff) << 48) | (7 << 45);
-	value += cvt.d;
+	rounded = value + cvt.d;
+	if (value < 1.0 && rounded >= 1.0) *decpt += 1;
+        value = rounded;
 	if (value >= 10.0) {
 		value /= 10.0;
 		*decpt += 1;
@@ -168,33 +171,42 @@ static char *dtostr(double value, int ndigit, int *decpt, int *sign, int ecvtfla
 }
 
 static void initTables(void) {
+	int d1, d2;
 	int i;
 	char nstr[8];
 
 	if (E0toE99[0] == 0) {
 		strcpy(nstr, "1E+00");
-		for (i = 0; i < 100; i++) {
-			nstr[3] = (i / 10) + '0';
-			nstr[4] = (i % 10) + '0';
-			E0toE99[i] = strtod(nstr, NULL);
+		for (d1 = 0, i = 0; d1 < 10; d1++) {
+			for (d2 = 0; d2 < 10; d2++) {
+				nstr[3] = d1 + '0';
+				nstr[4] = d2 + '0';
+				E0toE99[i++] = strtod(nstr, NULL);
+			}
 		}
 		nstr[2] = '-';
-		for (i = 0; i < 100; i++) {
-			nstr[3] = (i / 10) + '0';
-			nstr[4] = (i % 10) + '0';
-			E_0toE_99[i] = strtod(nstr, NULL);
+		for (d1 = 0, i = 0; d1 < 10; d1++) {
+			for (d2 = 0; d2 < 10; d2++) {
+				nstr[3] = d1 + '0';
+				nstr[4] = d2 + '0';
+				E_0toE_99[i++] = strtod(nstr, NULL);
+			}
 		}
 		strcpy(nstr, "1E+0000");
-		for (i = 0; i < 25; i++) {
-			nstr[3] = (i / 10) + '0';
-			nstr[4] = (i % 10) + '0';
-			E00toE2400[i] = strtod(nstr, NULL);
+		for (d1 = 0, i = 0; i < 25; d1++) {
+			for (d2 = 0; d2 < 10 && i < 25; d2++) {
+				nstr[3] = d1 + '0';
+				nstr[4] = d2 + '0';
+				E00toE2400[i++] = strtod(nstr, NULL);
+			}
 		}
 		nstr[2] = '-';
-		for (i = 0; i < 25; i++) {
-			nstr[3] = (i / 10) + '0';
-			nstr[4] = (i % 10) + '0';
-			E_00toE_2400[i] = strtod(nstr, NULL);
+		for (d1 = 0, i = 0; i < 25; d1++) {
+			for (d2 = 0; d2 < 10 && i < 25; d2++) {
+				nstr[3] = d1 + '0';
+				nstr[4] = d2 + '0';
+				E_00toE_2400[i++] = strtod(nstr, NULL);
+			}
 		}
 	}
 }
